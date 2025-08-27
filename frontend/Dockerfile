@@ -1,5 +1,8 @@
 # Stage 1: Build the React application
+ARG VITE_API_BASE_URL
 FROM node:20-alpine AS build
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 WORKDIR /app
 
