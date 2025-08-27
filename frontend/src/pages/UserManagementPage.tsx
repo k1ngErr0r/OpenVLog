@@ -189,7 +189,6 @@ export function UserManagementPage() {
       <UserDataTable
         columns={columns}
         data={users}
-        onDelete={handleDelete}
       />
     </div>
   );
