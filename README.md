@@ -1,18 +1,16 @@
-<<<<<<< HEAD
-# OpenVLog
-The primary goal of this project is to create a simple, user-friendly dashboard for logging and tracking security vulnerabilities. This tool will provide a centralized platform for   │ │    security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.  
-=======
 # OpenVLog: Vulnerability Logging and Tracking Tool
 
 OpenVLog is a web-based tool designed for logging and tracking security vulnerabilities. It provides a centralized platform for security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.
 
-## Project Goals
+## Features
 
-- Centralized Vulnerability Management
-- User-Friendly Interface
-- Secure User Authentication
-- User Management (Admin Only)
-- Containerized Deployment
+- **Modern UI/UX:** A clean and intuitive interface built with React and shadcn/ui.
+- **Collapsible Sidebar:** For easy navigation.
+- **Interactive Data Tables:** With sorting, filtering, and pagination for vulnerabilities and users.
+- **Secure Authentication:** Using JWT for user authentication.
+- **Role-Based Access Control:** With admin and user roles.
+- **Containerized Deployment:** With Docker and Docker Compose for easy setup and deployment.
+- **Modular Backend:** A well-structured backend built with Node.js and Express.
 
 ## Technology Stack
 
@@ -20,6 +18,8 @@ OpenVLog is a web-based tool designed for logging and tracking security vulnerab
 - React
 - shadcn/ui
 - Vite
+- TypeScript
+- Tailwind CSS
 
 **Backend:**
 - Node.js with Express
@@ -28,12 +28,6 @@ OpenVLog is a web-based tool designed for logging and tracking security vulnerab
 **Containerization:**
 - Docker
 - Docker Compose
-
-## Core Features
-
-- User Authentication (Login/Logout)
-- Vulnerability Management (Add, View, Edit, Delete)
-- User Management (Add, Delete - Admin Only)
 
 ## Setup and Installation
 
@@ -50,7 +44,17 @@ git clone <your-repository-url>
 cd OpenVLog
 ```
 
-### 2. Build and Run with Docker Compose
+### 2. Configure Environment Variables
+
+Create a `.env` file in the root of the project by copying the example file:
+
+```bash
+cp .env.example .env
+```
+
+Now, open the `.env` file and fill in the required environment variables.
+
+### 3. Build and Run with Docker Compose
 
 From the project root directory, run the following command to build the Docker images and start the services:
 
@@ -58,13 +62,7 @@ From the project root directory, run the following command to build the Docker i
 docker-compose up --build
 ```
 
-This command will:
-- Build the backend and frontend Docker images.
-- Start the PostgreSQL database container.
-- Start the backend API server container.
-- Start the frontend web server container.
-
-### 3. Create the Admin User
+### 4. Create the Admin User
 
 After the services are up and running, you need to create an initial admin user. Open a **new terminal window** in the project root and run:
 
@@ -74,41 +72,39 @@ docker-compose exec backend node create_admin.js
 
 You should see a message `Admin user created successfully.`
 
-### 4. Access the Application
+### 5. Access the Application
 
 Once all services are running, you can access the OpenVLog application in your web browser at:
 
 [http://localhost:5173](http://localhost:5173)
 
-Use the following credentials to log in:
-- **Username:** `admin`
-- **Password:** `admin`
+Log in with the admin credentials you set in the `.env` file.
 
 ## API Endpoints
 
-The backend API is accessible at `http://localhost:3001`. The frontend is configured to proxy requests to `/api` to the backend.
+The backend API is accessible at `http://localhost:3001`.
 
 ### Authentication
 - `POST /api/auth/register`: Register a new user.
 - `POST /api/auth/login`: Log in and receive a JWT.
 
 ### Vulnerabilities
-- `GET /api/vulnerabilities`: Get all vulnerabilities (Auth required).
-- `GET /api/vulnerabilities/:id`: Get a single vulnerability by ID (Auth required).
-- `POST /api/vulnerabilities`: Add a new vulnerability (Auth & Admin required).
-- `PUT /api/vulnerabilities/:id`: Update a vulnerability (Auth & Admin required).
-- `DELETE /api/vulnerabilities/:id`: Delete a vulnerability (Auth & Admin required).
+- `GET /api/vulnerabilities`: Get all vulnerabilities.
+- `GET /api/vulnerabilities/:id`: Get a single vulnerability by ID.
+- `POST /api/vulnerabilities`: Add a new vulnerability (Admin only).
+- `PUT /api/vulnerabilities/:id`: Update a vulnerability (Admin only).
+- `DELETE /api/vulnerabilities/:id`: Delete a vulnerability (Admin only).
 
 ### User Management
-- `GET /api/users`: Get all users (Auth & Admin required).
-- `POST /api/users`: Add a new user (Auth & Admin required).
-- `DELETE /api/users/:id`: Delete a user (Auth & Admin required).
+- `GET /api/users`: Get all users (Admin only).
+- `POST /api/users`: Add a new user (Admin only).
+- `DELETE /api/users/:id`: Delete a user (Admin only).
 
 ## Development
 
 ### Frontend Development Server
 
-To run the frontend development server (with hot-reloading) separately from Docker Compose:
+To run the frontend development server (with hot-reloading):
 
 ```bash
 cd frontend
@@ -118,7 +114,7 @@ npm run dev
 
 ### Backend Development
 
-To run the backend development server separately (requires PostgreSQL running and configured):
+To run the backend development server (requires PostgreSQL running and configured):
 
 ```bash
 cd backend
@@ -126,5 +122,17 @@ npm install
 npm start
 ```
 
-Ensure your `DATABASE_URL` environment variable is set correctly if running outside Docker Compose.
->>>>>>> 87c3886 (Initial push - local development completed.)
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+### Development Guidelines
+
+- **Code Style:** Follow the existing code style.
+- **Commit Messages:** Use conventional commit messages.
+- **Testing:** Add tests for new features.
+- **Documentation:** Keep the documentation up to date.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
