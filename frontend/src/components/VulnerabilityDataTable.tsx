@@ -9,6 +9,7 @@ import {
   SortingState,
   useReactTable,
   Column,
+  Table as ReactTable,
 } from '@tanstack/react-table';
 import {
   Table,
