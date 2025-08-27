@@ -83,7 +83,7 @@ export function DashboardPage() {
     {
       accessorKey: "severity",
       header: "Severity",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const severity = row.getValue("severity") as string;
         const variant = {
           Critical: "destructive",
@@ -98,7 +98,7 @@ export function DashboardPage() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const status = row.getValue("status") as string;
         return <Badge>{status}</Badge>;
       }
@@ -106,14 +106,14 @@ export function DashboardPage() {
     {
       accessorKey: "reported_at",
       header: "Reported At",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const date = new Date(row.getValue("reported_at") as string);
         return date.toLocaleString();
       },
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const vulnerability = row.original;
         return (
           <div className="space-x-2">

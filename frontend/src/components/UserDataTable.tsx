@@ -75,8 +75,8 @@ export function UserDataTable<TData, TValue>({
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
-              .filter((column: Column<TData, TValue>) => column.getCanHide())
-              .map((column: Column<TData, TValue>) => {
+              .filter((column: any) => column.getCanHide())
+              .map((column: any) => {
                 return (
                   <DropdownMenuCheckboxItem
                     key={column.id}

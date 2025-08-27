@@ -104,14 +104,14 @@ export function UserManagementPage() {
     {
       accessorKey: "is_admin",
       header: "Role",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isAdmin = row.getValue("is_admin");
         return <Badge variant={isAdmin ? "destructive" : "secondary"}>{isAdmin ? "Admin" : "User"}</Badge>;
       },
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const user = row.original;
         return (
           <AlertDialog>
