@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { MainLayout } from "./layout/MainLayout";
 
 const useAuth = () => {
   const token = localStorage.getItem("token");
@@ -7,5 +8,11 @@ const useAuth = () => {
 
 export const ProtectedRoute = () => {
   const isAuth = useAuth();
-  return isAuth ? <Outlet /> : <Navigate to="/login" />;
+  return isAuth ? (
+    <MainLayout>
+      <Outlet />
+    </MainLayout>
+  ) : (
+    <Navigate to="/login" />
+  );
 };

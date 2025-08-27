@@ -161,8 +161,6 @@ export function DashboardPage() {
       <VulnerabilityDataTable
         columns={columns}
         data={vulnerabilities}
-        onDelete={handleDelete}
-        onEdit={(id) => navigate(`/vulnerabilities/${id}/edit`)}
       />
     </div>
   );
