@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# OpenVLog
-The primary goal of this project is to create a simple, user-friendly dashboard for logging and tracking security vulnerabilities. This tool will provide a centralized platform for   │ │    security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.  
-=======
 # OpenVLog: Vulnerability Logging and Tracking Tool
 
 OpenVLog is a web-based tool designed for logging and tracking security vulnerabilities. It provides a centralized platform for security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.
@@ -127,4 +123,3 @@ npm start
 ```
 
 Ensure your `DATABASE_URL` environment variable is set correctly if running outside Docker Compose.
->>>>>>> 87c3886 (Initial push - local development completed.)
