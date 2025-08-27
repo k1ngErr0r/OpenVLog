@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { VulnerabilityDataTable } from "@/components/VulnerabilityDataTable";
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Vulnerability {
   id: number;
@@ -48,72 +54,116 @@ export function DashboardPage() {
     fetchVulnerabilities();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this vulnerability?")) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/vulnerabilities/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        fetchVulnerabilities(); // Refresh the list
-      } catch (error) {
-        console.error("Error deleting vulnerability:", error);
-        alert("Failed to delete vulnerability. Only admins can delete.");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
       }
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/vulnerabilities/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchVulnerabilities(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting vulnerability:", error);
+      alert("Failed to delete vulnerability. Only admins can delete.");
     }
   };
 
-  return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Vulnerability Dashboard</h1>
-        <div className="space-x-2">
-          <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>
-          <Button onClick={() => navigate("/users")}>Manage Users</Button>
-          <Button onClick={handleLogout}>Logout</Button>
-        </div>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Severity</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Reported At</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {vulnerabilities.map((vuln) => (
-            <TableRow key={vuln.id}>
-              <TableCell className="font-medium">{vuln.name}</TableCell>
-              <TableCell>{vuln.description}</TableCell>
-              <TableCell>{vuln.severity}</TableCell>
-              <TableCell>{vuln.status}</TableCell>
-              <TableCell>{new Date(vuln.reported_at).toLocaleString()}</TableCell>
-              <TableCell className="space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/vulnerabilities/${vuln.id}/edit`)}>
-                  Edit
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(vuln.id)}>
+  const columns: ColumnDef<Vulnerability>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+    },
+    {
+      accessorKey: "severity",
+      header: "Severity",
+      cell: ({ row }) => {
+        const severity = row.getValue("severity") as string;
+        const variant = {
+          Critical: "destructive",
+          High: "destructive",
+          Medium: "secondary",
+          Low: "outline",
+          Informational: "outline",
+        }[severity] as "destructive" | "secondary" | "outline" | "default" | null | undefined;
+        return <Badge variant={variant}>{severity}</Badge>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        return <Badge>{status}</Badge>;
+      }
+    },
+    {
+      accessorKey: "reported_at",
+      header: "Reported At",
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("reported_at") as string);
+        return date.toLocaleString();
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const vulnerability = row.original;
+        return (
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/vulnerabilities/${vulnerability.id}/edit`)}
+            >
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
                   Delete
                 </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    vulnerability.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(vulnerability.id)}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Vulnerability Dashboard</h1>
+        <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>
+      </div>
+      <VulnerabilityDataTable
+        columns={columns}
+        data={vulnerabilities}
+        onDelete={handleDelete}
+        onEdit={(id) => navigate(`/vulnerabilities/${id}/edit`)}
+      />
     </div>
   );
 }

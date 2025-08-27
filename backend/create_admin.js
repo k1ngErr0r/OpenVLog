@@ -6,8 +6,13 @@ const pool = new Pool({
 });
 
 const createAdmin = async () => {
-  const username = 'admin';
-  const password = 'admin';
+  const username = process.env.ADMIN_USER;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!username || !password) {
+    console.error('ADMIN_USER and ADMIN_PASSWORD environment variables are required.');
+    return;
+  }
 
   try {
     // Check if admin already exists
