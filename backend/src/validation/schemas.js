@@ -1,7 +1,15 @@
 const { z } = require('zod');
 
 const username = z.string().min(3).max(50);
-const password = z.string().min(6).max(128);
+// Password policy: at least 12 chars incl upper, lower, digit, special
+const password = z
+  .string()
+  .min(12, 'Password must be at least 12 characters long')
+  .max(128, 'Password must be at most 128 characters')
+  .regex(/[a-z]/, 'Password must include a lowercase letter')
+  .regex(/[A-Z]/, 'Password must include an uppercase letter')
+  .regex(/[0-9]/, 'Password must include a digit')
+  .regex(/[^A-Za-z0-9]/, 'Password must include a special character');
 
 const registerSchema = z.object({ username, password });
 const loginSchema = z.object({ username, password });
