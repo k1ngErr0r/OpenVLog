@@ -1,16 +1,5 @@
 const app = require('./src/app');
-const winston = require('winston');
-
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-  ],
-});
+const logger = require('./src/logger');
 
 const port = process.env.PORT || 3001;
 
@@ -23,6 +12,29 @@ if (missing.length) {
   process.exit(1);
 }
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Backend server listening at http://localhost:${port}`);
 });
+
+const shutdown = async (signal) => {
+  logger.info('shutdown.initiated', { signal });
+  try {
+    await new Promise(res => server.close(res));
+    logger.info('http.server.closed');
+    try {
+      const pool = require('./src/config/db');
+      await pool.end();
+      logger.info('db.pool.closed');
+    } catch (e) {
+      logger.warn('db.pool.close.error', { error: e.message });
+    }
+  } catch (e) {
+    logger.error('shutdown.error', { error: e.message });
+  } finally {
+    // Allow transports to flush
+    setTimeout(() => process.exit(0), 500);
+  }
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

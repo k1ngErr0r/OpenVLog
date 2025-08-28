@@ -14,8 +14,16 @@ const logger = winston.createLogger({
   });
 
 const getAllUsers = async (req, res) => {
-  const users = await userService.getAllUsers();
-  res.json(users);
+  const { page, pageSize, search } = req.query;
+  const hasParams = page || pageSize || search;
+  if (!hasParams) {
+    const users = await userService.getAllUsers();
+    return res.json(users);
+  }
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
+  const result = await userService.getUsers({ page: pageNum, pageSize: sizeNum, search });
+  res.json(result);
 };
 
 const addUser = async (req, res) => {

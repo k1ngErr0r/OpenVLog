@@ -127,10 +127,20 @@ If any pagination/filter parameter is present the response shape becomes:
 If no parameters are provided the legacy array response is preserved for simplicity/compatibility.
 
 ### User Management
-- `GET /api/users`: Get all users (Admin only).
+- `GET /api/users`: Get all users OR (with query params) paginated results (Admin only).
 - `POST /api/users`: Add a new user (Admin only).
 - `DELETE /api/users/:id`: Delete a user (Admin only).
 	(Non‑admins will not see the Add User button.)
+
+User pagination & search (optional):
+```
+GET /api/users?page=1&pageSize=20&search=alice
+```
+Response (when paginated):
+```
+{ data: [...], page, pageSize, total, totalPages }
+```
+If no pagination params are present the legacy array is returned.
 
 ## Development
 
@@ -174,6 +184,8 @@ See `.env.example` for a complete list with defaults. Key variables:
 ## Health Check
 
 Backend exposes `GET /healthz` returning JSON: `{ status: 'ok', uptime, latency_ms }` (500 on failure). The database connectivity is probed with a simple `SELECT 1`.
+
+Readiness endpoint `GET /readyz` returns `{ status: 'ready' }` only after migrations table exists (503 otherwise). Cached for 10s to reduce DB load.
 
 Example:
 ```bash
@@ -233,7 +245,7 @@ Backend exposes Prometheus metrics at `/metrics` including:
 	- `auth_refresh_failure_total`
 	- `auth_logout_total`
 
-Scrape via backend service or via Traefik (`/metrics`). Consider restricting exposure (IP filtering / auth) in production.
+Scrape via backend service or via Traefik (`/metrics`). Traefik Prometheus metrics also enabled (entrypoint/service labels). Consider restricting exposure (IP filtering / auth) in production.
 
 ### Hardened CSP
 Content Security Policy now excludes `'unsafe-inline'` by default. To temporarily allow inline scripts/styles (e.g., during migration) set `ALLOW_INLINE_CSP=true` in environment.
@@ -259,6 +271,25 @@ PowerShell (Windows):
 Environment requirements: `POSTGRES_USER`, `POSTGRES_DB` must be exported (compose loads them). Adjust `DB_SERVICE` or `-DbService` if your service name differs.
 
 Rotation: Backup scripts retain most recent 14 backups by default (`KEEP` / `-Keep`).
+
+Automated backups: A `backup-cron` service runs (default 02:00 daily) when using the Traefik compose. Configure:
+```
+BACKUP_CRON_SCHEDULE="0 3 * * *"   # schedule
+BACKUP_KEEP=30                      # retention count
+```
+
+### Migrations
+Simple SQL migrations under `backend/migrations` applied via:
+```
+docker compose exec backend npm run migrate
+```
+Migration state tracked in `_migrations` table (idempotent). `/readyz` depends on this state.
+
+### Access Logging & Graceful Shutdown
+Structured access logs emitted (`http.access`) with: requestId, method, path, status, duration_ms, ip. On SIGTERM/SIGINT server drains connections, closes DB pool, then exits.
+
+### Static Asset Caching & Compression
+Traefik applies compression and long-lived cache headers (`Cache-Control: public,max-age=31536000,immutable`) to frontend assets via middleware labels.
 
 
 Backend Dockerfile now uses a multi-stage build with `npm ci --omit=dev` on Alpine for a smaller image and reproducible installs.

@@ -2,7 +2,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "3001:3001"
+      - "3001:3001" # dev (removed in prod override)
     env_file:
       - ./.env
     environment:
@@ -12,6 +12,9 @@ services:
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
     depends_on:
       - db
+    networks:
+      - internal
+      - public
   db:
     image: postgres:14-alpine
     environment:
@@ -21,16 +24,24 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - internal
   frontend:
     build:
       context: ./frontend
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     ports:
-      - "5173:80"
+      - "5173:80" # dev (removed in prod override)
     env_file:
       - ./.env
     depends_on:
       - backend
+    networks:
+      - public
 volumes:
   postgres_data:
+networks:
+  public:
+  internal:
+    internal: true

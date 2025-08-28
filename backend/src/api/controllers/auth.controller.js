@@ -1,19 +1,9 @@
 const jwt = require('jsonwebtoken');
-const winston = require('winston');
+const logger = require('../../logger');
 const userService = require('../../services/user.service');
 const { HttpError } = require('../../middleware/error.middleware');
 const authMetrics = require('../../metrics/auth.metrics');
 
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    transports: [
-      new winston.transports.Console(),
-    ],
-  });
 
 const register = async (req, res) => {
   const { username, password } = req.body;
@@ -49,11 +39,13 @@ const login = async (req, res) => {
   const user = await userService.loginUser(username, password);
   if (!user) {
     authMetrics.loginFailure.inc();
+    logger.warn('auth.login.failure', { username, ip: req.ip });
     throw new HttpError(401, 'Invalid credentials', 'AUTH');
   }
   const { accessToken, refreshToken } = issueTokens(user);
   setRefreshCookie(res, refreshToken);
   authMetrics.loginSuccess.inc();
+  logger.info('auth.login.success', { userId: user.id, username: user.username, ip: req.ip });
   res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
 };
 
@@ -66,12 +58,14 @@ const refresh = async (req, res) => {
     // Optionally validate user still exists
     const user = await userService.getUserById(payload.userId);
     if (!user) throw new HttpError(401, 'User no longer exists', 'AUTH');
-    const { accessToken, refreshToken } = issueTokens(user);
+  const { accessToken, refreshToken } = issueTokens(user);
     setRefreshCookie(res, refreshToken);
-    authMetrics.refreshSuccess.inc();
+  authMetrics.refreshSuccess.inc();
+  logger.info('auth.refresh.success', { userId: user.id, ip: req.ip });
   res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
   } catch (err) {
-    authMetrics.refreshFailure.inc();
+  authMetrics.refreshFailure.inc();
+  logger.warn('auth.refresh.failure', { reason: err.message, ip: req.ip });
     throw new HttpError(401, 'Invalid refresh token', 'AUTH');
   }
 };
@@ -79,6 +73,7 @@ const refresh = async (req, res) => {
 const logout = async (_req, res) => {
   res.clearCookie('refresh_token', { path: '/api/auth' });
   authMetrics.logout.inc();
+  logger.info('auth.logout', { userId: req.user?.userId, ip: req.ip });
   res.status(204).send();
 };
 

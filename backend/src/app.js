@@ -16,6 +16,22 @@ const client = require('prom-client');
 const app = express();
 
 app.use(requestId);
+// Structured access log
+app.use((req, res, next) => {
+  const start = process.hrtime.bigint();
+  res.on('finish', () => {
+    const diffMs = Number(process.hrtime.bigint() - start) / 1e6;
+    logger.info('http.access', {
+      requestId: req.id,
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      duration_ms: Number(diffMs.toFixed(2)),
+      ip: req.ip,
+    });
+  });
+  next();
+});
 // Security headers
 const allowInline = process.env.ALLOW_INLINE_CSP === 'true';
 app.use(helmet({
@@ -76,6 +92,23 @@ app.get('/healthz', async (req, res) => {
     return res.json({ status: 'ok', uptime: process.uptime(), latency_ms: Date.now() - start });
   } catch (err) {
     return res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+let readinessCache = { ready: false, lastCheck: 0 };
+app.get('/readyz', async (_req, res) => {
+  const now = Date.now();
+  if (readinessCache.ready && now - readinessCache.lastCheck < 10000) {
+    return res.json({ status: 'ready', cached: true });
+  }
+  try {
+    const pool = require('./config/db');
+    // Ensure migrations table exists and at least baseline applied
+    const result = await pool.query("SELECT 1 FROM _migrations LIMIT 1");
+    readinessCache = { ready: true, lastCheck: now };
+    return res.json({ status: 'ready' });
+  } catch (err) {
+    return res.status(503).json({ status: 'not_ready', error: err.message });
   }
 });
 

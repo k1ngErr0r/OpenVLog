@@ -28,6 +28,26 @@ const getAllUsers = async () => {
     return result.rows;
 };
 
+const getUsers = async ({ page, pageSize, search }) => {
+    const where = [];
+    const values = [];
+    let i = 1;
+    if (search) {
+        where.push(`username ILIKE $${i}`);
+        values.push(`%${search}%`);
+        i++;
+    }
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countRes = await pool.query(`SELECT COUNT(*) FROM users ${whereClause}`.trim(), values);
+    const total = parseInt(countRes.rows[0].count, 10);
+    values.push(pageSize, (page - 1) * pageSize);
+    const listRes = await pool.query(
+        `SELECT id, username, is_admin FROM users ${whereClause} ORDER BY id ASC LIMIT $${i} OFFSET $${i + 1}`.trim(),
+        values
+    );
+    return { data: listRes.rows, page, pageSize, total, totalPages: Math.ceil(total / pageSize) || 0 };
+};
+
 const addUser = async (username, password) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
@@ -46,6 +66,7 @@ module.exports = {
     registerUser,
     loginUser,
     getAllUsers,
+    getUsers,
     addUser,
     deleteUser,
 };
