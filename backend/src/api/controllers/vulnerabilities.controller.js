@@ -14,8 +14,31 @@ const logger = winston.createLogger({
   });
 
 const getAllVulnerabilities = async (req, res) => {
-  const vulnerabilities = await vulnerabilityService.getAllVulnerabilities();
-  res.json(vulnerabilities);
+  const { page, pageSize, severity, status, search } = req.query;
+  const hasParams = page || pageSize || severity || status || search;
+
+  // If no pagination/filter params supplied, preserve legacy behavior (return full list array)
+  if (!hasParams) {
+    const vulnerabilities = await vulnerabilityService.getAllVulnerabilities();
+    return res.json(vulnerabilities);
+  }
+
+  // Validation for enums (reuse existing constants)
+  if (severity && !VALID_SEVERITIES.includes(severity)) throw new HttpError(400, 'Invalid severity', 'VALIDATION');
+  if (status && !VALID_STATUS.includes(status)) throw new HttpError(400, 'Invalid status', 'VALIDATION');
+
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
+
+  const result = await vulnerabilityService.getVulnerabilities({
+    page: pageNum,
+    pageSize: sizeNum,
+    severity,
+    status,
+    search,
+  });
+
+  res.json(result);
 };
 
 const getVulnerabilityById = async (req, res) => {

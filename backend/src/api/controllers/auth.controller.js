@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const winston = require('winston');
 const userService = require('../../services/user.service');
 const { HttpError } = require('../../middleware/error.middleware');
+const authMetrics = require('../../metrics/auth.metrics');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -35,7 +36,7 @@ const issueTokens = (user) => {
 const setRefreshCookie = (res, refreshToken) => {
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // always secure when served behind HTTPS/Traefik
     sameSite: 'lax',
     path: '/api/auth',
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -46,9 +47,13 @@ const login = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) throw new HttpError(400, 'Username and password are required', 'VALIDATION');
   const user = await userService.loginUser(username, password);
-  if (!user) throw new HttpError(401, 'Invalid credentials', 'AUTH');
+  if (!user) {
+    authMetrics.loginFailure.inc();
+    throw new HttpError(401, 'Invalid credentials', 'AUTH');
+  }
   const { accessToken, refreshToken } = issueTokens(user);
   setRefreshCookie(res, refreshToken);
+  authMetrics.loginSuccess.inc();
   res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
 };
 
@@ -63,14 +68,17 @@ const refresh = async (req, res) => {
     if (!user) throw new HttpError(401, 'User no longer exists', 'AUTH');
     const { accessToken, refreshToken } = issueTokens(user);
     setRefreshCookie(res, refreshToken);
+    authMetrics.refreshSuccess.inc();
   res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
   } catch (err) {
+    authMetrics.refreshFailure.inc();
     throw new HttpError(401, 'Invalid refresh token', 'AUTH');
   }
 };
 
 const logout = async (_req, res) => {
   res.clearCookie('refresh_token', { path: '/api/auth' });
+  authMetrics.logout.inc();
   res.status(204).send();
 };
 

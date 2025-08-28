@@ -92,7 +92,7 @@ The backend API is accessible at `http://localhost:3001`.
 - `POST /api/auth/logout`: Invalidates refresh cookie (client also clears cached `{ token, user }`).
 
 ### Vulnerabilities
-- `GET /api/vulnerabilities`: Get all vulnerabilities.
+- `GET /api/vulnerabilities`: Get all vulnerabilities OR (when query params supplied) a paginated/filtering result object.
 - `GET /api/vulnerabilities/:id`: Get a single vulnerability by ID.
 - `POST /api/vulnerabilities`: Add a new vulnerability (Admin only).
 - `PUT /api/vulnerabilities/:id`: Update a vulnerability (Admin only).
@@ -102,6 +102,29 @@ The backend API is accessible at `http://localhost:3001`.
 Allowed field values:
 - severity: `Critical`, `High`, `Medium`, `Low`, `Informational`
 - status: `Open`, `In Progress`, `Resolved`, `Closed`
+
+Pagination & Filtering (optional query parameters):
+```
+GET /api/vulnerabilities?page=1&pageSize=20&severity=High&status=Open&search=sql
+```
+Parameters:
+- `page` (default 1)
+- `pageSize` (default 20, max 100)
+- `severity` (must be valid constant)
+- `status` (must be valid constant)
+- `search` (case-insensitive search over name & description)
+
+If any pagination/filter parameter is present the response shape becomes:
+```
+{
+	data: [...],
+	page: 1,
+	pageSize: 20,
+	total: 57,
+	totalPages: 3
+}
+```
+If no parameters are provided the legacy array response is preserved for simplicity/compatibility.
 
 ### User Management
 - `GET /api/users`: Get all users (Admin only).
@@ -160,6 +183,83 @@ curl -s http://localhost:3001/healthz | jq
 Nginx (frontend container) also serves a lightweight `/healthz` endpoint for container orchestration probes.
 
 ## Container Build Improvements
+## Optional Traefik HTTPS Reverse Proxy
+
+For production you can enable automatic HTTPS and clean hostnames using Traefik. A sample `docker-compose.traefik.yml` override is provided.
+
+Environment additions (example):
+```
+ACME_EMAIL=you@example.com
+APP_HOST=app.example.com
+API_HOST=api.example.com
+```
+
+Run with:
+```
+docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d
+```
+
+Notes:
+- Remove direct `ports` from frontend/backend in primary compose when promoting to production; only expose Traefik.
+- Ensure DNS A records for APP_HOST and API_HOST point to the server.
+- After HTTPS is active, consider setting cookie `secure` flag unconditionally and tightening `SameSite`.
+- Local development with Traefik can use mkcert/self-signed certs; for simplicity you may keep current direct ports in dev.
+
+### Production Port Removal
+Use the provided `docker-compose.prod.yml` to remove direct host port exposure for `backend` and `frontend` when Traefik is fronting the stack:
+
+```
+docker compose -f docker-compose.yml -f docker-compose.traefik.yml -f docker-compose.prod.yml up -d
+```
+
+### Rate Limiting
+Basic edge rate limiting is enabled via Traefik labels (`average=20, burst=40`). Adjust in `docker-compose.traefik.yml` as needed.
+
+Additionally, a lightweight in-app per-IP limiter protects `/api/auth/login` and `/api/auth/refresh` to slow password spraying. Configure via env:
+```
+AUTH_RATE_WINDOW_MS=60000      # time window (default 60000)
+AUTH_RATE_MAX_ATTEMPTS=10      # allowed attempts within window (default 10)
+```
+Exceeding limits returns `429 Too Many Requests`.
+
+### Metrics
+Backend exposes Prometheus metrics at `/metrics` including:
+- Default Node/process metrics.
+- Histogram: `http_request_duration_seconds{method,route,code}`.
+- Auth counters:
+	- `auth_login_success_total`
+	- `auth_login_failure_total`
+	- `auth_refresh_success_total`
+	- `auth_refresh_failure_total`
+	- `auth_logout_total`
+
+Scrape via backend service or via Traefik (`/metrics`). Consider restricting exposure (IP filtering / auth) in production.
+
+### Hardened CSP
+Content Security Policy now excludes `'unsafe-inline'` by default. To temporarily allow inline scripts/styles (e.g., during migration) set `ALLOW_INLINE_CSP=true` in environment.
+
+### Secure Cookies
+Refresh token cookie is now always set with `secure: true`; ensure all deployments use HTTPS (Traefik or other TLS terminator) to avoid losing the cookie over HTTP.
+
+### Backups
+Scripts are provided under `backend/scripts` for PostgreSQL logical backups.
+
+Shell (Linux/macOS WSL):
+```
+BACKUP_DIR=./backups ./backend/scripts/backup.sh
+BACKUP=./backups/openvlog-backup-20240101-000000.sql.gz ./backend/scripts/restore.sh
+```
+
+PowerShell (Windows):
+```
+./backend/scripts/backup.ps1 -BackupDir ./backups
+./backend/scripts/restore.ps1 -Backup ./backups/openvlog-backup-20240101-000000.sql.gz
+```
+
+Environment requirements: `POSTGRES_USER`, `POSTGRES_DB` must be exported (compose loads them). Adjust `DB_SERVICE` or `-DbService` if your service name differs.
+
+Rotation: Backup scripts retain most recent 14 backups by default (`KEEP` / `-Keep`).
+
 
 Backend Dockerfile now uses a multi-stage build with `npm ci --omit=dev` on Alpine for a smaller image and reproducible installs.
 

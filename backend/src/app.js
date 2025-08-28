@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const winston = require('winston');
+const helmet = require('helmet');
 
 const authRoutes = require('./api/routes/auth.routes');
 const userRoutes = require('./api/routes/users.routes');
@@ -10,10 +11,46 @@ const setupRoutes = require('./api/routes/setup.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 const requestId = require('./middleware/requestId.middleware');
 const logger = require('./logger');
+const client = require('prom-client');
 
 const app = express();
 
 app.use(requestId);
+// Security headers
+const allowInline = process.env.ALLOW_INLINE_CSP === 'true';
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": allowInline ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+      "style-src": allowInline ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+      "img-src": ["'self'", 'data:'],
+      "connect-src": ["'self'", process.env.FRONTEND_ORIGIN || 'http://localhost:5173'],
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Prometheus metrics setup
+client.collectDefaultMetrics();
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5]
+});
+
+app.use((req, res, next) => {
+  const start = process.hrtime.bigint();
+  res.on('finish', () => {
+    const diffNs = Number(process.hrtime.bigint() - start);
+    const seconds = diffNs / 1e9;
+    const route = req.route?.path || req.path;
+    httpRequestDuration.labels(req.method, route, String(res.statusCode)).observe(seconds);
+  });
+  next();
+});
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
@@ -39,6 +76,15 @@ app.get('/healthz', async (req, res) => {
     return res.json({ status: 'ok', uptime: process.uptime(), latency_ms: Date.now() - start });
   } catch (err) {
     return res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+app.get('/metrics', async (_req, res) => {
+  try {
+    res.set('Content-Type', client.register.contentType);
+    res.end(await client.register.metrics());
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 });
 

@@ -1,4 +1,4 @@
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type CellContext } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -11,12 +11,12 @@ interface Options {
 export function useUserColumns({ onDelete }: Options): ColumnDef<UserRow>[] {
   return [
     { accessorKey: 'username', header: 'Username' },
-    { accessorKey: 'is_admin', header: 'Role', cell: ({ row }) => {
+  { accessorKey: 'is_admin', header: 'Role', cell: ({ row }: CellContext<UserRow, unknown>) => {
         const isAdmin = row.getValue('is_admin') as boolean;
         return <Badge variant={isAdmin ? 'destructive' : 'secondary'}>{isAdmin ? 'Admin' : 'User'}</Badge>;
       }
     },
-    { id: 'actions', cell: ({ row }) => {
+  { id: 'actions', cell: ({ row }: CellContext<UserRow, unknown>) => {
         const user = row.original as UserRow;
         return (
           <AlertDialog>
