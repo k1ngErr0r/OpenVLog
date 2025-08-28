@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import api, { useApiWithToasts } from '@/lib/http';
-import { useNavigate } from "react-router-dom";
+import { useApiWithToasts } from '@/lib/http';
 import { Button } from "@/components/ui/button";
 import { UserDataTable } from "@/components/UserDataTable";
 import { useUserColumns } from '@/hooks/useUserColumns';
@@ -28,7 +27,6 @@ export function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { push } = useToast();
   const api = useApiWithToasts();
 

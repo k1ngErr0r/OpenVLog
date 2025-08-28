@@ -6,15 +6,15 @@ export function Header() {
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
-    if (stored) {
-      setTheme(stored as 'light' | 'dark');
-      document.documentElement.classList.toggle('dark', stored === 'dark');
+    let mode: 'light' | 'dark';
+    if (stored === 'light' || stored === 'dark') {
+      mode = stored;
     } else {
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = prefersDark ? 'dark' : 'light';
-      setTheme(initial);
-      document.documentElement.classList.toggle('dark', initial === 'dark');
+      mode = prefersDark ? 'dark' : 'light';
     }
+    setIsDarkMode(mode === 'dark');
+    document.documentElement.classList.toggle('dark', mode === 'dark');
   }, []);
 
   const toggleDarkMode = () => {

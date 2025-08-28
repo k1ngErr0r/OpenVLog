@@ -4,13 +4,13 @@ import path from 'node:path'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const plugins = [react()]
+export default defineConfig(() => {
+  const plugins: any[] = [react()]
   if (process.env.ANALYZE === 'true') {
-    plugins.push(visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }))
+    plugins.push(visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }) as any)
   }
   return {
-    plugins,
+    plugins: plugins as any,
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

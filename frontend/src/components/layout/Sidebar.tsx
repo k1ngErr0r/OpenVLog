@@ -48,7 +48,6 @@ export function Sidebar() {
               isCollapsed && !isMobile ? 'justify-center' : ''
             )
           }
-          aria-current={({ isActive }) => (isActive ? 'page' : undefined) as any}
         >
           {item.icon}
           <span className={cn(isCollapsed && !isMobile ? 'sr-only' : 'transition-opacity group-hover:opacity-100')}>{item.label}</span>
