@@ -164,6 +164,50 @@ npm install
 npm start
 ```
 
+### Developer Convenience (Makefile & Root Scripts)
+
+You can use GNU Make (macOS/Linux; on Windows install via Chocolatey or use WSL) or the root `package.json` scripts to speed up common tasks.
+
+Make targets (from project root):
+```
+make bootstrap   # Install backend & frontend dependencies
+make build       # Build all docker images
+make up          # Start the full stack detached
+make down        # Stop containers
+make restart     # Down + up
+make logs        # Follow backend logs
+make migrate     # Run backend migrations if migrate.js exists
+make backend-shell  # Interactive shell in backend container
+make frontend-shell # Interactive shell in frontend container
+make clean       # Down + remove volumes & orphans
+make prune       # Docker system prune (dangling)
+```
+
+Equivalent npm scripts (cross‑platform friendly):
+```
+npm run bootstrap
+npm run build
+npm run up
+npm run down
+npm run restart
+npm run logs
+npm run migrate
+npm run backend:shell
+npm run frontend:shell
+npm run clean
+npm run prune
+```
+
+### Local HTTPS (Planned)
+
+Run `npm run tls:hint` (or `node scripts/dev/tls.js`) for step‑by‑step instructions using `mkcert` and Traefik to enable HTTPS locally. This script does not generate certificates automatically; it guides you to:
+1. Install `mkcert` and trust the local CA.
+2. Generate `certs/local-cert.pem` and `certs/local-key.pem`.
+3. Mount `./certs` into the Traefik container and reference the cert/key in its TLS configuration.
+4. Switch `FRONTEND_ORIGIN` & `VITE_API_BASE_URL` to `https://localhost`.
+
+Ensure `certs/` is added to `.gitignore` (script will suggest if missing).
+
 ## Environment Variables
 
 See `.env.example` for a complete list with defaults. Key variables:

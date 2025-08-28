@@ -8,6 +8,7 @@ const authRoutes = require('./api/routes/auth.routes');
 const userRoutes = require('./api/routes/users.routes');
 const vulnerabilityRoutes = require('./api/routes/vulnerabilities.routes');
 const setupRoutes = require('./api/routes/setup.routes');
+const versionRoutes = require('./api/routes/version.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 const requestId = require('./middleware/requestId.middleware');
 const logger = require('./logger');
@@ -75,6 +76,7 @@ app.use(cors({
 }));
 
 app.use('/api/setup', setupRoutes); // must come before auth guard checks by clients
+app.use('/version', versionRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vulnerabilities', vulnerabilityRoutes);

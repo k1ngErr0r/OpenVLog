@@ -1,0 +1,24 @@
+{
+  "name": "openvlog-root",
+  "private": true,
+  "description": "Developer convenience scripts for OpenVLog",
+  "scripts": {
+    "bootstrap": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "docker-compose build",
+    "up": "docker-compose up -d",
+    "down": "docker-compose down",
+    "restart": "npm run down && npm run up",
+    "logs": "docker-compose logs -f backend",
+    "ps": "docker-compose ps",
+    "migrate": "cd backend && npm run migrate",
+    "backend:shell": "docker-compose exec backend /bin/sh",
+    "frontend:shell": "docker-compose exec frontend /bin/sh",
+    "clean": "docker-compose down -v --remove-orphans",
+    "prune": "docker system prune -f",
+    "tls:hint": "node scripts/dev/tls.js"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}

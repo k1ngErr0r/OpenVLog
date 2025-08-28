@@ -1,3 +1,21 @@
+// Load environment variables for local development (ignored if files missing)
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const dotenv = require('dotenv');
+  const candidatePaths = [
+    path.join(__dirname, '.env'),            // backend/.env (if ever added)
+    path.join(__dirname, '..', '.env'),      // project root .env (current location)
+  ];
+  candidatePaths.forEach(p => {
+    if (fs.existsSync(p)) {
+      dotenv.config({ path: p });
+    }
+  });
+} catch (e) {
+  // Silent fallback – container runtime supplies env vars
+}
+
 const app = require('./src/app');
 const logger = require('./src/logger');
 
