@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useApiWithToasts } from '@/lib/http';
 import { useToast } from '@/components/ui/toast';
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,12 @@ export function LoginPage() {
             Submit
           </Button>
         </form>
+        <div className="mt-4 text-center space-y-2 text-sm text-gray-300">
+          <Link to="/request-password-reset" className="underline text-yellow-400">Forgot password?</Link>
+          <div>
+            Have a reset token? <Link to="/reset-password" className="underline text-yellow-400">Reset now</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

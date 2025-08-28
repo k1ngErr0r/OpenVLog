@@ -11,6 +11,13 @@ OpenVLog is a web-based tool designed for logging and tracking security vulnerab
 - **Role-Based Access Control:** With admin and user roles.
 - **Containerized Deployment:** With Docker and Docker Compose for easy setup and deployment.
 - **Modular Backend:** A well-structured backend built with Node.js and Express.
+- **Swagger API Docs:** Interactive OpenAPI docs at `/api-docs` (backend) for quick exploration & testing.
+- **Comments & Discussion:** Threaded comments per vulnerability with username attribution.
+- **File Attachments:** Upload supporting evidence (logs, PoCs) to vulnerabilities (admins) and download / delete.
+- **Dashboard Visualizations:** Severity & status distributions plus recent items and date-range filtering.
+- **In-App Notifications:** Polling notifications for vulnerability status changes.
+- **Password Reset & Account Lockout:** Self-service password reset token flow and automatic lockout on repeated failed logins.
+- **CSV Export:** One‑click export of filtered vulnerabilities list to CSV for external reporting.
 
 ## Technology Stack
 
@@ -104,6 +111,12 @@ The backend API is accessible at `http://localhost:3001`.
 - `POST /api/auth/refresh`: Uses httpOnly refresh cookie; returns `{ token, user }`.
 - `GET /api/auth/me`: Returns the current authenticated user `{ id, username, isAdmin }`.
 - `POST /api/auth/logout`: Invalidates refresh cookie (client also clears cached `{ token, user }`).
+- `POST /api/auth/request-password-reset`: Initiate password reset (generic response; in non-production returns token once created for manual testing).
+- `POST /api/auth/reset-password`: Reset password via `{ token, password }` (single-use token, hashed server-side).
+
+Password Reset UI: Accessible via links on the login page ("Forgot password?" and "Reset now"). Request page collects username; reset page accepts token + new password (enforces strong policy).
+
+Account Lockout: After `AUTH_LOCK_MAX_ATTEMPTS` consecutive failures, account locks for `AUTH_LOCK_DURATION_MIN` minutes (HTTP 423). Metrics & logs capture events.
 
 ### Vulnerabilities
 - `GET /api/vulnerabilities`: Get all vulnerabilities OR (when query params supplied) a paginated/filtering result object.
@@ -112,6 +125,7 @@ The backend API is accessible at `http://localhost:3001`.
 - `PUT /api/vulnerabilities/:id`: Update a vulnerability (Admin only).
 - `DELETE /api/vulnerabilities/:id`: Delete a vulnerability (Admin only).
 - UI automatically hides create/delete actions for non‑admin users.
+- `GET /api/vulnerabilities/export`: Export filtered vulnerabilities as CSV (same filters as list; no pagination; requires auth).
 
 Allowed field values:
 - severity: `Critical`, `High`, `Medium`, `Low`, `Informational`
@@ -127,6 +141,8 @@ Parameters:
 - `severity` (must be valid constant)
 - `status` (must be valid constant)
 - `search` (case-insensitive search over name & description)
+- `dateFrom` (YYYY-MM-DD inclusive lower bound on creation date)
+- `dateTo` (YYYY-MM-DD inclusive upper bound on creation date)
 
 If any pagination/filter parameter is present the response shape becomes:
 ```
@@ -139,6 +155,33 @@ If any pagination/filter parameter is present the response shape becomes:
 }
 ```
 If no parameters are provided the legacy array response is preserved for simplicity/compatibility.
+
+CSV Export:
+```
+GET /api/vulnerabilities/export?severity=High&status=Open&search=sql&dateFrom=2025-01-01&dateTo=2025-08-31
+```
+Response: `text/csv` attachment `vulnerabilities.csv` with columns: id,name,description,severity,status,reported_at,updated_at.
+Frontend: Use the "Export CSV" button on the Dashboard (respects current filter controls including date range & search). Sorting parameter (`sort=field:DIR`) is honored for ordering.
+
+### Vulnerability Comments
+
+- `GET /api/vulnerabilities/:id/comments`: List comments (chronological) with `id, body, created_at, user_id, username`.
+- `POST /api/vulnerabilities/:id/comments`: Add a comment (authenticated users). Body: `{ body: "text" }`.
+
+Frontend: Comments appear on the vulnerability detail page with optimistic posting and username display.
+
+### Vulnerability Attachments
+
+- `GET /api/vulnerabilities/:id/attachments`: List attachments (admins and regular users can view list & download; uploads restricted to admins by route guard).
+- `POST /api/vulnerabilities/:id/attachments`: (Admin) `multipart/form-data` with field `attachment` (<=10MB) to upload supporting file. Stored with unique filename; original name preserved.
+- `GET /api/attachments/:attachmentId/download`: Download binary content.
+- `DELETE /api/attachments/:attachmentId`: (Admin) Delete attachment (DB + filesystem cleanup).
+
+Security Notes: Filenames are randomized; only whitelisted path usage (no user-controlled directory elements). Consider future MIME/type validation & AV scanning for production hardening.
+
+### Notifications
+
+In-app notifications endpoint (polling) supplies recent events such as vulnerability status changes. Frontend polls periodically and displays a badge in the UI. (Future enhancement: migrate to WebSockets or Server-Sent Events.)
 
 ### User Management
 - `GET /api/users`: Get all users OR (with query params) paginated results (Admin only).
@@ -355,6 +398,11 @@ Backend exposes Prometheus metrics at `/metrics` including:
 	- `auth_refresh_success_total`
 	- `auth_refresh_failure_total`
 	- `auth_logout_total`
+	- `auth_lockout_triggered_total`
+	- `auth_lockout_blocked_total`
+	- `auth_password_reset_requested_total`
+	- `auth_password_reset_completed_total`
+	- `auth_password_reset_failed_total`
 
 Scrape via backend service or via Traefik (`/metrics`). Traefik Prometheus metrics also enabled (entrypoint/service labels). Consider restricting exposure (IP filtering / auth) in production.
 
@@ -398,6 +446,19 @@ Migration state tracked in `_migrations` table (idempotent). `/readyz` depends o
 
 ### Access Logging & Graceful Shutdown
 Structured access logs emitted (`http.access`) with: requestId, method, path, status, duration_ms, ip. On SIGTERM/SIGINT server drains connections, closes DB pool, then exits.
+
+## Swagger / API Documentation
+
+Navigate to `http://localhost:3001/api-docs` for interactive OpenAPI documentation (auto-generated from JSDoc annotations in route files). You can authorize with a JWT (Bearer token) to call protected endpoints directly. Keep in mind: file upload endpoints require `multipart/form-data` selection.
+
+## Roadmap / Future Enhancements
+
+- Refresh token invalidation (token versioning) on password reset
+- Real-time notifications (WebSocket/SSE) replacing polling
+- Attachment MIME validation & optional antivirus scanning
+- Storybook component library & visual regression tests
+- Email delivery for password reset tokens
+- Audit log of administrative actions
 
 ### Static Asset Caching & Compression
 Traefik applies compression and long-lived cache headers (`Cache-Control: public,max-age=31536000,immutable`) to frontend assets via middleware labels.

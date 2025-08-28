@@ -191,6 +191,56 @@ router.get('/stats', authenticateToken, vulnerabilitiesController.getVulnerabili
 
 /**
  * @swagger
+ * /vulnerabilities/export:
+ *   get:
+ *     summary: Export all vulnerabilities to CSV with optional filtering
+ *     tags: [Vulnerabilities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: severity
+ *         schema:
+ *           type: string
+ *           enum: [Critical, High, Medium, Low, Informational]
+ *         description: Filter vulnerabilities by severity.
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [Open, In Progress, Resolved, Closed]
+ *         description: Filter vulnerabilities by status.
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search term for vulnerability name and description.
+ *       - in: query
+ *         name: dateFrom
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: "Filter vulnerabilities reported on or after this date (YYYY-MM-DD)."
+ *       - in: query
+ *         name: dateTo
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: "Filter vulnerabilities reported on or before this date (YYYY-MM-DD)."
+ *     responses:
+ *       '200':
+ *         description: A CSV file containing the filtered vulnerabilities.
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       '401':
+ *         description: Unauthorized.
+ */
+router.get('/export', authenticateToken, vulnerabilitiesController.exportVulnerabilities);
+
+/**
+ * @swagger
  * /vulnerabilities/{id}:
  *   get:
  *     summary: Get a single vulnerability by ID

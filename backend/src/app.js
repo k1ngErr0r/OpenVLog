@@ -7,6 +7,8 @@ const helmet = require('helmet');
 const authRoutes = require('./api/routes/auth.routes');
 const userRoutes = require('./api/routes/users.routes');
 const vulnerabilityRoutes = require('./api/routes/vulnerabilities.routes');
+const attachmentsRoutes = require('./api/routes/attachments.routes.js');
+const notificationsRoutes = require('./api/routes/notifications.routes.js');
 const setupRoutes = require('./api/routes/setup.routes');
 const versionRoutes = require('./api/routes/version.routes');
 const { errorHandler } = require('./middleware/error.middleware');
@@ -172,5 +174,4 @@ app.get('/metrics', async (_req, res) => {
 // Error handler (after routes)
 app.use(errorHandler);
 
-module.exports = app;
 module.exports = app;

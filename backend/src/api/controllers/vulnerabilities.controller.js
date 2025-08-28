@@ -1,3 +1,4 @@
+const { Parser } = require('json2csv');
 const winston = require('winston');
 const vulnerabilityService = require('../../services/vulnerability.service');
 const { HttpError } = require('../../middleware/error.middleware');
@@ -96,6 +97,44 @@ const getVulnerabilityStats = async (req, res) => {
     res.json(stats);
 };
 
+const exportVulnerabilities = async (req, res) => {
+    const { severity, status, search, sort, dateFrom, dateTo } = req.query;
+
+    // Validation for enums (reuse existing constants)
+    if (severity && !VALID_SEVERITIES.includes(severity)) throw new HttpError(400, 'Invalid severity', 'VALIDATION');
+    if (status && !VALID_STATUS.includes(status)) throw new HttpError(400, 'Invalid status', 'VALIDATION');
+
+    // Sort parsing: expected format field:direction
+    let sortField = 'reported_at';
+    let sortDir = 'DESC';
+    if (sort) {
+        const [f, d] = String(sort).split(':');
+        const allowedFields = ['reported_at', 'severity', 'status', 'name'];
+        if (allowedFields.includes(f)) sortField = f;
+        if (d && ['asc','desc','ASC','DESC'].includes(d)) sortDir = d.toUpperCase();
+    }
+
+    const vulnerabilities = await vulnerabilityService.getAllVulnerabilitiesForExport({
+        severity,
+        status,
+        search,
+        sortField,
+        sortDir,
+        dateFrom,
+        dateTo,
+    });
+
+    const fields = ['id', 'name', 'description', 'severity', 'status', 'reported_at', 'updated_at'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(vulnerabilities);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('vulnerabilities.csv');
+    res.send(csv);
+};
+
+// (Duplicate exportVulnerabilities definition removed below)
+
 module.exports = {
     getAllVulnerabilities,
     getVulnerabilityById,
@@ -103,4 +142,5 @@ module.exports = {
     updateVulnerability,
     deleteVulnerability,
     getVulnerabilityStats,
+    exportVulnerabilities,
 };

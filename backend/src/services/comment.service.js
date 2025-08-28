@@ -10,10 +10,15 @@ const listComments = async (vulnerabilityId) => {
 
 const addComment = async (vulnerabilityId, userId, body) => {
   const res = await pool.query(
-    'INSERT INTO vulnerability_comments (vulnerability_id, user_id, body) VALUES ($1, $2, $3) RETURNING id, body, created_at, user_id',
+    `INSERT INTO vulnerability_comments (vulnerability_id, user_id, body)
+     VALUES ($1, $2, $3)
+     RETURNING id, body, created_at, user_id`,
     [vulnerabilityId, userId, body]
   );
-  return res.rows[0];
+  const row = res.rows[0];
+  // fetch username for immediate response consistency with list
+  const userRes = await pool.query('SELECT username FROM users WHERE id = $1', [row.user_id]);
+  return { ...row, username: userRes.rows[0]?.username };
 };
 
 module.exports = { listComments, addComment };

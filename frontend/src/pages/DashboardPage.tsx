@@ -115,6 +115,19 @@ export function DashboardPage() {
 
   const pageCount = Math.ceil(total / pageSize) || 1;
 
+  const handleExportCsv = () => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (severity) params.append('severity', severity);
+    if (status) params.append('status', status);
+    if (sort) params.append('sort', sort);
+    if (dateFrom) params.append('dateFrom', format(dateFrom, 'yyyy-MM-dd'));
+    if (dateTo) params.append('dateTo', format(dateTo, 'yyyy-MM-dd'));
+
+    const url = `/api/vulnerabilities/export?${params.toString()}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -184,6 +197,7 @@ export function DashboardPage() {
           <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
             <Button variant="ghost" onClick={clearFilters}>Reset</Button>
             <Button onClick={applyFilters}>Apply Filters</Button>
+            <Button onClick={handleExportCsv}>Export CSV</Button>
           </div>
         </div>
         {loading ? (
