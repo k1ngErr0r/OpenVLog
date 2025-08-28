@@ -34,18 +34,29 @@ OpenVLog is a web-based tool designed for logging and tracking security vulnerab
 To get OpenVLog up and running on your local machine, follow these steps:
 
 ### Prerequisites
+ - `POST /api/auth/request-password-reset`: Initiate a password reset (response is generic; in non-production returns token for manual testing).
+ - `POST /api/auth/reset-password`: Reset password using `{ token, password }`.
 
-- Docker Desktop (or Docker Engine and Docker Compose) installed and running.
+ Account Lockout:
+ - After `AUTH_LOCK_MAX_ATTEMPTS` consecutive failed logins (default 5) the account is locked for `AUTH_LOCK_DURATION_MIN` minutes (default 15).
+ - While locked, login attempts return HTTP 423 `LOCKED` (metrics + logs record blocked attempts). Expired locks auto-clear on next attempt.
 
-### 1. Clone the Repository
-
+ Password Reset Flow (current development mode):
+ 1. Client posts `{ username }` to `/api/auth/request-password-reset`.
+ 2. If the user exists a token row is created (hashed in DB); in non-production the plaintext token is returned to facilitate manual testing until email delivery is integrated.
+ 3. Client posts `{ token, password }` to `/api/auth/reset-password` to update the password (token single-use, expires after TTL—default 30 minutes).
+ 4. On success old refresh tokens are not invalidated automatically yet (future improvement: token versioning / rotation).
 ```bash
-git clone <your-repository-url>
 cd OpenVLog
 ```
 
 ### 2. Configure Environment Variables
 
+	- `auth_lockout_triggered_total`
+	- `auth_lockout_blocked_total`
+	- `auth_password_reset_requested_total`
+	- `auth_password_reset_completed_total`
+	- `auth_password_reset_failed_total`
 Create a `.env` file in the root of the project by copying the example file:
 
 ```bash
@@ -66,6 +77,9 @@ docker-compose up --build
 
 When the application starts with an empty `users` table, navigating to the frontend will automatically redirect you to an **Initial Setup** page. Provide a username and strong password to create the first administrator. Afterwards you'll be redirected to the login page.
 
+ | AUTH_LOCK_MAX_ATTEMPTS | Failed logins before lockout (default 5) |
+ | AUTH_LOCK_DURATION_MIN | Lockout duration minutes (default 15) |
+ | PASSWORD_RESET_TTL_MIN | Password reset token lifetime minutes (default 30) |
 If the setup page does not appear (e.g., database was partially initialized) or you prefer a CLI method, you can still use the legacy script:
 
 ```bash

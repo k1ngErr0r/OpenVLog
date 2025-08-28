@@ -68,11 +68,14 @@ export function Sidebar() {
         )}
         aria-label="Sidebar"
       >
-        <div className="flex h-[60px] items-center border-b px-6">
+        <div className={cn("flex h-[60px] items-center border-b", isCollapsed ? "px-2 justify-center" : "px-6 justify-between")}>
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="h-6 w-6" />
             <span className={cn(isCollapsed ? 'sr-only' : '')}>OpenVLog</span>
           </NavLink>
+          <div className={cn(isCollapsed ? 'hidden' : '')}>
+            <Notifications />
+          </div>
         </div>
         <div className="flex-1 overflow-auto py-2">
           <NavLinks />
@@ -91,7 +94,7 @@ export function Sidebar() {
       </div>
 
       {/* Mobile Header with Sheet */}
-      <header className="flex md:hidden h-14 items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
+      <header className="flex md:hidden h-14 items-center justify-between gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
@@ -119,6 +122,7 @@ export function Sidebar() {
             </div>
           </SheetContent>
         </Sheet>
+        <Notifications />
       </header>
     </>
   );

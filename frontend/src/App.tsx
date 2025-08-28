@@ -4,6 +4,9 @@ import { SetupPage } from './pages/SetupPage';
 import { DashboardPage } from "./pages/DashboardPage";
 import { AddVulnerabilityPage } from "./pages/AddVulnerabilityPage";
 import { EditVulnerabilityPage } from "./pages/EditVulnerabilityPage";
+import { VulnerabilityDetailPage } from './pages/VulnerabilityDetailPage';
+import { RequestPasswordResetPage } from './pages/RequestPasswordResetPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { UserManagementPage } from "./pages/UserManagementPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
@@ -25,10 +28,13 @@ function App() {
               <SetupGuard>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   <Route path="/setup" element={<SetupPage />} />
                   <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
+                    <Route path="/vulnerabilities/:id" element={<VulnerabilityDetailPage />} />
                     <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route element={<AdminRoute />}>

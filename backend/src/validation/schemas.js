@@ -13,6 +13,8 @@ const password = z
 
 const registerSchema = z.object({ username, password });
 const loginSchema = z.object({ username, password });
+const requestPasswordResetSchema = z.object({ username });
+const resetPasswordSchema = z.object({ token: z.string().min(10).max(200), password });
 
 const createUserSchema = z.object({ username, password });
 
@@ -29,6 +31,8 @@ const updateVulnerabilitySchema = z.object({ ...vulnerabilityBase });
 module.exports = {
   registerSchema,
   loginSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
   createUserSchema,
   createVulnerabilitySchema,
   updateVulnerabilitySchema,

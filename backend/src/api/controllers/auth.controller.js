@@ -1,8 +1,10 @@
 const jwt = require('jsonwebtoken');
 const logger = require('../../logger');
 const userService = require('../../services/user.service');
+const passwordResetService = require('../../services/passwordReset.service');
 const { HttpError } = require('../../middleware/error.middleware');
 const authMetrics = require('../../metrics/auth.metrics');
+const { requestPasswordResetSchema, resetPasswordSchema } = require('../../validation/schemas');
 
 
 const register = async (req, res) => {
@@ -36,12 +38,52 @@ const setRefreshCookie = (res, refreshToken) => {
 const login = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) throw new HttpError(400, 'Username and password are required', 'VALIDATION');
-  const user = await userService.loginUser(username, password);
+
+  // Configurable thresholds
+  const MAX_ATTEMPTS = parseInt(process.env.AUTH_LOCK_MAX_ATTEMPTS || '5', 10);
+  const LOCK_MINUTES = parseInt(process.env.AUTH_LOCK_DURATION_MIN || '15', 10);
+
+  const user = await userService.findByUsername(username);
   if (!user) {
+    // do not reveal existence
     authMetrics.loginFailure.inc();
-    logger.warn('auth.login.failure', { username, ip: req.ip });
+    logger.warn('auth.login.failure', { username, ip: req.ip, reason: 'unknown_user' });
     throw new HttpError(401, 'Invalid credentials', 'AUTH');
   }
+
+  // If locked check expiry
+  if (user.lock_until) {
+    const lockUntil = new Date(user.lock_until).getTime();
+    if (lockUntil > Date.now()) {
+      authMetrics.lockoutBlocked.inc();
+      logger.warn('auth.login.locked', { userId: user.id, username: user.username, ip: req.ip });
+      throw new HttpError(423, 'Account temporarily locked. Try again later.', 'LOCKED');
+    } else {
+      // auto clear expired lock
+      await userService.resetFailedAttempts(user.id);
+      user.failed_attempts = 0;
+      user.lock_until = null;
+    }
+  }
+
+  const passwordOk = await require('bcryptjs').compare(password, user.password_hash);
+  if (!passwordOk) {
+    const { justLocked, attempts } = await userService.incrementFailedAttempts(user.id, MAX_ATTEMPTS, LOCK_MINUTES);
+    authMetrics.loginFailure.inc();
+    if (justLocked) {
+      authMetrics.lockoutTriggered.inc();
+      logger.warn('auth.login.lockout_triggered', { userId: user.id, username: user.username, ip: req.ip, attempts });
+      throw new HttpError(423, 'Account locked due to repeated failed logins', 'LOCKED');
+    }
+    logger.warn('auth.login.failure', { username, ip: req.ip, attempts });
+    throw new HttpError(401, 'Invalid credentials', 'AUTH');
+  }
+
+  // success: reset attempts if any
+  if (user.failed_attempts && user.failed_attempts > 0) {
+    await userService.resetFailedAttempts(user.id);
+  }
+
   const { accessToken, refreshToken } = issueTokens(user);
   setRefreshCookie(res, refreshToken);
   authMetrics.loginSuccess.inc();
@@ -84,10 +126,56 @@ const me = async (req, res) => {
   res.json({ id: user.id, username: user.username, isAdmin: user.is_admin });
 };
 
+// Request password reset (no user enumeration in response)
+const requestPasswordReset = async (req, res) => {
+  const parsed = requestPasswordResetSchema.safeParse(req.body);
+  if (!parsed.success) throw new HttpError(400, parsed.error.issues[0].message, 'VALIDATION');
+  const { username } = parsed.data;
+  const user = await userService.findByUsername(username);
+  if (user) {
+    try {
+      const token = await passwordResetService.createPasswordResetToken(user.id, parseInt(process.env.PASSWORD_RESET_TTL_MIN || '30', 10));
+      authMetrics.passwordResetRequested.inc();
+      logger.info('auth.password_reset.requested', { userId: user.id, username: user.username });
+      // For now (no email), return token directly in secure dev mode only
+      if (process.env.NODE_ENV !== 'production') {
+        return res.json({ message: 'If that user exists, a reset token has been generated', token });
+      }
+    } catch (e) {
+      logger.error('auth.password_reset.request_error', { error: e.message });
+    }
+  }
+  res.json({ message: 'If that user exists, a reset token has been generated' });
+};
+
+// Perform password reset
+const resetPassword = async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) throw new HttpError(400, parsed.error.issues[0].message, 'VALIDATION');
+  const { token, password } = parsed.data;
+  try {
+    const tokenRow = await passwordResetService.consumePasswordResetToken(token);
+    if (!tokenRow) {
+      authMetrics.passwordResetFailed.inc();
+      throw new HttpError(400, 'Invalid or expired token', 'TOKEN');
+    }
+    await passwordResetService.updateUserPassword(tokenRow.user_id, password);
+    authMetrics.passwordResetCompleted.inc();
+    logger.info('auth.password_reset.completed', { userId: tokenRow.user_id });
+    res.json({ message: 'Password updated successfully' });
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    logger.error('auth.password_reset.error', { error: e.message });
+    throw new HttpError(500, 'Failed to reset password', 'ERROR');
+  }
+};
+
 module.exports = {
   register,
   login,
   refresh,
   logout,
   me,
+  requestPasswordReset,
+  resetPassword,
 };

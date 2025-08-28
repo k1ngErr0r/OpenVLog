@@ -75,11 +75,57 @@ app.use(cors({
   credentials: true,
 }));
 
+// --- Swagger API Documentation Setup ---
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'OpenVLog API',
+      version: '1.0.0',
+      description: 'Interactive API documentation for the OpenVLog application. Use the "Authorize" button to authenticate with a JWT token.',
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter JWT token in the format: Bearer {token}',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+    servers: [
+      {
+        url: 'http://localhost:3001',
+        description: 'Development Server'
+      }
+    ],
+  },
+  // Path to the API docs
+  apis: ['./src/api/routes/*.js', './src/validation/schemas.js'],
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'OpenVLog API Docs',
+}));
+// --- End Swagger Setup ---
+
 app.use('/api/setup', setupRoutes); // must come before auth guard checks by clients
 app.use('/version', versionRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vulnerabilities', vulnerabilityRoutes);
+app.use('/api/attachments', attachmentsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from the OpenVLog backend!');
@@ -126,4 +172,5 @@ app.get('/metrics', async (_req, res) => {
 // Error handler (after routes)
 app.use(errorHandler);
 
+module.exports = app;
 module.exports = app;

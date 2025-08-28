@@ -11,5 +11,7 @@ router.post('/login', authRateLimit, authController.login);
 router.post('/refresh', authRateLimit, authController.refresh);
 router.post('/logout', authController.logout);
 router.get('/me', authenticateToken, me);
+router.post('/request-password-reset', authRateLimit, authController.requestPasswordReset);
+router.post('/reset-password', authRateLimit, authController.resetPassword);
 
 module.exports = router;

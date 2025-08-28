@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApiWithToasts } from '@/lib/http';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from '@/lib/auth';
 import { VulnerabilityDataTable } from "@/components/VulnerabilityDataTable";
@@ -8,19 +8,65 @@ import { useVulnerabilityColumns } from '@/hooks/useVulnerabilityColumns';
 import { useToast } from '@/components/ui/toast';
 import { Spinner } from "@/components/ui/spinner";
 import type { Vulnerability } from '@/types';
+import { DashboardStats } from "@/components/DashboardStats";
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function DashboardPage() {
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [severity, setSeverity] = useState<string | undefined>(searchParams.get('severity') || undefined);
+  const [status, setStatus] = useState<string | undefined>(searchParams.get('status') || undefined);
+  const [sort, setSort] = useState(searchParams.get('sort') || 'reported_at:DESC');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(searchParams.get('dateFrom') ? new Date(searchParams.get('dateFrom')) : undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(searchParams.get('dateTo') ? new Date(searchParams.get('dateTo')) : undefined);
   const navigate = useNavigate();
   const { push } = useToast();
   const api = useApiWithToasts();
 
+  const syncQuery = (overrides: Record<string, any> = {}) => {
+    const q: Record<string,string> = {};
+    const effective = {
+      page,
+      pageSize,
+      search: search.trim(),
+      severity,
+      status,
+      sort,
+      dateFrom: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
+      dateTo: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
+      ...overrides,
+    };
+    Object.entries(effective).forEach(([k,v]) => {
+      if (v === undefined || v === '' || v === null) return;
+      q[k] = String(v);
+    });
+    setSearchParams(q, { replace: true });
+  };
+
   const fetchVulnerabilities = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/api/vulnerabilities');
-      setVulnerabilities(response.data);
+      const response = await api.get('/api/vulnerabilities', { params: Object.fromEntries(searchParams.entries()) });
+      if (Array.isArray(response.data)) {
+        setVulnerabilities(response.data);
+        setTotal(response.data.length);
+      } else {
+        setVulnerabilities(response.data.data);
+        setTotal(response.data.total);
+        setPage(response.data.page);
+        setPageSize(response.data.pageSize);
+      }
     } catch (error) {
       console.error('Error fetching vulnerabilities:', error);
     } finally {
@@ -30,7 +76,8 @@ export function DashboardPage() {
 
   useEffect(() => {
     fetchVulnerabilities();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -45,20 +92,118 @@ export function DashboardPage() {
 
   const columns = useVulnerabilityColumns({ onDelete: handleDelete });
 
-  if (loading) {
-    return <div role="status" aria-busy="true" className="flex justify-center py-10"><Spinner /></div>;
-  }
+  const applyFilters = () => {
+    setPage(1);
+    syncQuery({ page: 1 });
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setSeverity(undefined);
+    setStatus(undefined);
+    setSort('reported_at:DESC');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setPage(1);
+    syncQuery({ page:1, search:undefined, severity:undefined, status:undefined, sort:'reported_at:DESC', dateFrom: undefined, dateTo: undefined });
+  };
+
+  const changePage = (next: number) => {
+    setPage(next);
+    syncQuery({ page: next });
+  };
+
+  const pageCount = Math.ceil(total / pageSize) || 1;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Vulnerability Dashboard</h1>
-  {isAdmin() && <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        {isAdmin() && <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>}
       </div>
-      <VulnerabilityDataTable
-        columns={columns}
-        data={vulnerabilities}
-      />
+
+      <DashboardStats />
+
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Vulnerability Overview</h2>
+        <div className="p-4 border rounded-lg mb-4">
+          <div className="grid md:grid-cols-4 gap-4 items-end">
+            <div className="md:col-span-4">
+                <label className="block text-sm font-medium mb-1">Search</label>
+                <Input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') applyFilters(); }} placeholder="Search name or description" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-1">Severity</label>
+                <Select value={severity} onValueChange={(v)=>{ setSeverity(v==='__all' ? undefined : v); }}>
+                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="__all">All</SelectItem>
+                    {['Critical','High','Medium','Low','Informational'].map(s=> <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <Select value={status} onValueChange={(v)=>{ setStatus(v==='__all' ? undefined : v); }}>
+                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="__all">All</SelectItem>
+                    {['Open','In Progress','Resolved','Closed'].map(s=> <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-1">From Date</label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateFrom ? format(dateFrom, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus />
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-1">To Date</label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateTo ? format(dateTo, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus />
+                    </PopoverContent>
+                </Popover>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <Button variant="ghost" onClick={clearFilters}>Reset</Button>
+            <Button onClick={applyFilters}>Apply Filters</Button>
+          </div>
+        </div>
+        {loading ? (
+          <div role="status" aria-busy="true" className="flex justify-center py-10"><Spinner /></div>
+        ) : (
+          <div>
+            <VulnerabilityDataTable
+              columns={columns}
+              data={vulnerabilities}
+            />
+            <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
+              <div>Page {page} of {pageCount} • {total} total</div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page<=1} onClick={()=>changePage(page-1)}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page>=pageCount} onClick={()=>changePage(page+1)}>Next</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

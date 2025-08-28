@@ -14,8 +14,8 @@ const logger = winston.createLogger({
   });
 
 const getAllVulnerabilities = async (req, res) => {
-  const { page, pageSize, severity, status, search } = req.query;
-  const hasParams = page || pageSize || severity || status || search;
+  const { page, pageSize, severity, status, search, sort, dateFrom, dateTo } = req.query;
+  const hasParams = page || pageSize || severity || status || search || sort || dateFrom || dateTo;
 
   // If no pagination/filter params supplied, preserve legacy behavior (return full list array)
   if (!hasParams) {
@@ -30,12 +30,26 @@ const getAllVulnerabilities = async (req, res) => {
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
   const sizeNum = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100);
 
+  // Sort parsing: expected format field:direction
+  let sortField = 'reported_at';
+  let sortDir = 'DESC';
+  if (sort) {
+    const [f, d] = String(sort).split(':');
+    const allowedFields = ['reported_at', 'severity', 'status', 'name'];
+    if (allowedFields.includes(f)) sortField = f;
+    if (d && ['asc','desc','ASC','DESC'].includes(d)) sortDir = d.toUpperCase();
+  }
+
   const result = await vulnerabilityService.getVulnerabilities({
     page: pageNum,
     pageSize: sizeNum,
     severity,
     status,
     search,
+    sortField,
+    sortDir,
+    dateFrom,
+    dateTo,
   });
 
   res.json(result);
@@ -77,10 +91,16 @@ const deleteVulnerability = async (req, res) => {
   res.status(204).send();
 };
 
+const getVulnerabilityStats = async (req, res) => {
+    const stats = await vulnerabilityService.getVulnerabilityStats();
+    res.json(stats);
+};
+
 module.exports = {
     getAllVulnerabilities,
     getVulnerabilityById,
     addVulnerability,
     updateVulnerability,
     deleteVulnerability,
+    getVulnerabilityStats,
 };
