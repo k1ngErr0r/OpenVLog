@@ -19,6 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import api from '@/lib/http';
 
 const navItems = [
   { to: '/', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
@@ -30,7 +31,8 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await api.post('/api/auth/logout'); } catch { /* ignore */ }
     localStorage.removeItem('token');
     navigate('/login');
   };

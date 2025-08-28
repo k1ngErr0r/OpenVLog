@@ -30,7 +30,7 @@ const authenticateToken = async (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      return next(new HttpError(403, 'Invalid or expired token', 'AUTH')); 
+      return next(new HttpError(401, 'Invalid or expired token', 'AUTH'));
     }
     next(err);
   }
