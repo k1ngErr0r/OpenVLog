@@ -7,9 +7,14 @@ const { HttpError } = require('../../middleware/error.middleware');
 // --- Multer Setup ---
 const UPLOAD_DIR = path.join(__dirname, '../../../uploads');
 
-// Ensure upload directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// Ensure upload directory exists (directory is created & owned in Dockerfile; this is a safety net)
+try {
+    if (!fs.existsSync(UPLOAD_DIR)) {
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+} catch (e) {
+    // Log and continue; if we cannot create it, uploads will fail later with a clear error
+    console.error('Warning: unable to ensure uploads directory:', e.message);
 }
 
 const storage = multer.diskStorage({
