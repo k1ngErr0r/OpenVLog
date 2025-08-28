@@ -5,20 +5,23 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 import { Spinner } from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 
-const SEVERITY_COLORS = {
-  Critical: '#dc2626', // red-600
-  High: '#f97316',     // orange-500
-  Medium: '#facc15',   // yellow-400
-  Low: '#3b82f6',      // blue-500
-  Informational: '#6b7280', // gray-500
+type SeverityKey = 'Critical' | 'High' | 'Medium' | 'Low' | 'Informational';
+type StatusKey = 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+
+const SEVERITY_COLORS: Record<SeverityKey, string> = {
+  Critical: '#dc2626',
+  High: '#f97316',
+  Medium: '#facc15',
+  Low: '#3b82f6',
+  Informational: '#6b7280',
 };
 
-const STATUS_COLORS = {
-    Open: '#3b82f6',          // blue-500
-    'In Progress': '#f97316', // orange-500
-    Resolved: '#22c55e',      // green-500
-    Closed: '#6b7280',        // gray-500
-}
+const STATUS_COLORS: Record<StatusKey, string> = {
+  Open: '#3b82f6',
+  'In Progress': '#f97316',
+  Resolved: '#22c55e',
+  Closed: '#6b7280',
+};
 
 interface StatsData {
   severities: Record<string, number>;
@@ -53,8 +56,8 @@ export function DashboardStats() {
     return <p className="text-center text-red-500">Could not load statistics.</p>;
   }
 
-  const severityData = Object.entries(stats.severities).map(([name, value]) => ({ name, value }));
-  const statusData = Object.entries(stats.statuses).map(([name, value]) => ({ name, value }));
+  const severityData = Object.entries(stats.severities).map(([name, value]) => ({ name: name as SeverityKey, value }));
+  const statusData = Object.entries(stats.statuses).map(([name, value]) => ({ name: name as StatusKey, value }));
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -66,7 +69,7 @@ export function DashboardStats() {
           {severityData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={severityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                <Pie data={severityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}>
                   {severityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[entry.name] || '#8884d8'} />
                   ))}

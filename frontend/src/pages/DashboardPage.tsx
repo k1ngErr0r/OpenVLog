@@ -28,8 +28,10 @@ export function DashboardPage() {
   const [severity, setSeverity] = useState<string | undefined>(searchParams.get('severity') || undefined);
   const [status, setStatus] = useState<string | undefined>(searchParams.get('status') || undefined);
   const [sort, setSort] = useState(searchParams.get('sort') || 'reported_at:DESC');
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(searchParams.get('dateFrom') ? new Date(searchParams.get('dateFrom')) : undefined);
-  const [dateTo, setDateTo] = useState<Date | undefined>(searchParams.get('dateTo') ? new Date(searchParams.get('dateTo')) : undefined);
+  const initialDateFrom = searchParams.get('dateFrom');
+  const initialDateTo = searchParams.get('dateTo');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(initialDateFrom ? new Date(initialDateFrom) : undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(initialDateTo ? new Date(initialDateTo) : undefined);
   const navigate = useNavigate();
   const { push } = useToast();
   const api = useApiWithToasts();

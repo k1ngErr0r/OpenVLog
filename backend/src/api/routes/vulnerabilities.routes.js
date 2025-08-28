@@ -4,7 +4,8 @@ const vulnerabilitiesController = require('../controllers/vulnerabilities.contro
 const commentsRoutes = require('./comments.routes');
 const { authenticateToken } = require('../../middleware/auth.middleware');
 const { isAdmin } = require('../../middleware/admin.middleware');
-const vulnerabilityAttachmentsRoutes = require('./vulnerabilityAttachments.routes');
+// Attachments router (mounted under nested path)
+const vulnerabilityAttachmentsRoutes = require('./attachments.routes');
 
 /**
  * @swagger

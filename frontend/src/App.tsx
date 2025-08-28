@@ -4,7 +4,7 @@ import { SetupPage } from './pages/SetupPage';
 import { DashboardPage } from "./pages/DashboardPage";
 import { AddVulnerabilityPage } from "./pages/AddVulnerabilityPage";
 import { EditVulnerabilityPage } from "./pages/EditVulnerabilityPage";
-import { VulnerabilityDetailPage } from './pages/VulnerabilityDetailPage';
+// import { VulnerabilityDetailPage } from './pages/VulnerabilityDetailPage';
 import { RequestPasswordResetPage } from './pages/RequestPasswordResetPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { UserManagementPage } from "./pages/UserManagementPage";
@@ -34,7 +34,7 @@ function App() {
                   <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
-                    <Route path="/vulnerabilities/:id" element={<VulnerabilityDetailPage />} />
+                    {/* <Route path="/vulnerabilities/:id" element={<VulnerabilityDetailPage />} /> */}
                     <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route element={<AdminRoute />}>

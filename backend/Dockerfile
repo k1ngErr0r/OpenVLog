@@ -1,5 +1,6 @@
 # ---------- Base dependencies stage ----------
-FROM node:20-alpine AS deps
+FROM node:20.16-alpine AS deps
+# consider updating to latest patch for security fixes
 LABEL org.opencontainers.image.source="https://github.com/k1ngErr0r/OpenVLog" \
       org.opencontainers.image.title="OpenVLog Backend" \
       org.opencontainers.image.description="Backend service for OpenVLog vulnerability tracking" \
@@ -10,7 +11,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # ---------- Runtime image ----------
-FROM node:20-alpine AS runtime
+FROM node:20.16-alpine AS runtime
+# keep in sync with deps stage
 WORKDIR /app
 ENV NODE_ENV=production
 # Add non-root user for security
