@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { me } = require('../controllers/auth.controller.js');
-const { authenticateToken } = require('../middleware/authenticate.js');
+// Correct path to auth middleware (was pointing to non-existent authenticate.js)
+const { authenticateToken } = require('../../middleware/auth.middleware');
 const authRateLimit = require('../../middleware/authRateLimit.middleware');
 
 router.post('/register', authController.register);

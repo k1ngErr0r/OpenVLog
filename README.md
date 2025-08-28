@@ -180,12 +180,65 @@ See `.env.example` for a complete list with defaults. Key variables:
 | ADMIN_PASSWORD | (Legacy) Bootstrap admin password for `create_admin.js` fallback |
 | VITE_API_BASE_URL | API base URL injected at frontend build |
 | FRONTEND_ORIGIN | Allowed origin for CORS (defaults to http://localhost:5173) |
+| LOG_LEVEL | Log verbosity (default: info) |
+| LOG_TO_FILE | Enable file logging (true/false, default true) |
+| LOG_DIR | Directory for log files (default: logs) |
+| LOG_FILE | Log filename (default: app.log) |
+| LOG_ROTATE | Enable daily log rotation (default: false) |
+| LOG_ROTATE_MAX_SIZE | Max size before rotation when enabled (default: 5m) |
+| LOG_ROTATE_MAX_FILES | Retention (e.g., 14d, 10 files) (default: 14d) |
+
+Logging behavior:
+- Console logging always enabled.
+- File logging defaults to enabled only in production (set `LOG_TO_FILE=true` to force, `false` to disable).
+- When `LOG_ROTATE=true`, rotated files are created daily (pattern `app-YYYY-MM-DD.log`) with gzip compression and retention governed by `LOG_ROTATE_MAX_FILES`.
+
+### Logging Examples
+
+Enable rotation in production (example `.env` snippet):
+```
+NODE_ENV=production
+LOG_TO_FILE=true
+LOG_ROTATE=true
+LOG_ROTATE_MAX_SIZE=10m
+LOG_ROTATE_MAX_FILES=30d
+```
+
+Disable file logging in local development:
+```
+LOG_TO_FILE=false
+```
+
+Mount persistent log volume (already configured in `docker-compose.yml`):
+```
+docker compose up -d
+docker compose exec backend ls -l /app/logs
+```
+Inspect recent log (non-rotated mode):
+```
+docker compose exec backend tail -f /app/logs/app.log
+```
 
 ## Health Check
 
 Backend exposes `GET /healthz` returning JSON: `{ status: 'ok', uptime, latency_ms }` (500 on failure). The database connectivity is probed with a simple `SELECT 1`.
 
 Readiness endpoint `GET /readyz` returns `{ status: 'ready' }` only after migrations table exists (503 otherwise). Cached for 10s to reduce DB load.
+
+### Container-Level Health Checks
+
+Runtime health is enforced at the container layer as well:
+
+- **Backend container**: Docker `HEALTHCHECK` (see `backend/Dockerfile`) periodically curls `/healthz`. A failing probe marks the container `unhealthy`, enabling orchestrators or compose restarts.
+- **PostgreSQL service**: `docker-compose.yml` defines a healthcheck using `pg_isready`. Backend's `depends_on` uses `condition: service_healthy` so the API only starts after Postgres accepts connections.
+- **Effect**: Reduces noisy startup failures (e.g., transient DB connection errors) and provides clearer operational signals (`docker ps` shows healthy state).
+
+Operational tip: To inspect health statuses quickly run:
+```
+docker compose ps
+```
+
+If you add Traefik or other services, you can mirror this pattern with simple curl or script-based health checks to coordinate startup order.
 
 Example:
 ```bash

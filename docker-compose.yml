@@ -10,8 +10,11 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+    volumes:
+      - backend_logs:/app/logs
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - internal
       - public
@@ -26,6 +29,12 @@ services:
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   frontend:
     build:
       context: ./frontend
@@ -41,6 +50,7 @@ services:
       - public
 volumes:
   postgres_data:
+  backend_logs:
 networks:
   public:
   internal:
