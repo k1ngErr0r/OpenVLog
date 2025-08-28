@@ -1,5 +1,6 @@
 const winston = require('winston');
 const vulnerabilityService = require('../../services/vulnerability.service');
+const { HttpError } = require('../../middleware/error.middleware');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -13,83 +14,38 @@ const logger = winston.createLogger({
   });
 
 const getAllVulnerabilities = async (req, res) => {
-    try {
-        const vulnerabilities = await vulnerabilityService.getAllVulnerabilities();
-        logger.info('Fetched all vulnerabilities.');
-        res.json(vulnerabilities);
-    } catch (error) {
-        logger.error(`Error fetching vulnerabilities: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const vulnerabilities = await vulnerabilityService.getAllVulnerabilities();
+  res.json(vulnerabilities);
 };
 
 const getVulnerabilityById = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const vulnerability = await vulnerabilityService.getVulnerabilityById(id);
-        if (!vulnerability) {
-            logger.warn(`Vulnerability ${id} not found.`);
-            return res.status(404).json({ error: 'Vulnerability not found' });
-        }
-        logger.info(`Fetched vulnerability: ${id}`);
-        res.json(vulnerability);
-    } catch (error) {
-        logger.error(`Error fetching vulnerability ${id}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { id } = req.params;
+  const vulnerability = await vulnerabilityService.getVulnerabilityById(id);
+  if (!vulnerability) throw new HttpError(404, 'Vulnerability not found', 'NOT_FOUND');
+  res.json(vulnerability);
 };
 
 const addVulnerability = async (req, res) => {
-    const { name, description, severity, status } = req.body;
-    if (!name) {
-        logger.warn('Attempt to add vulnerability with missing name.');
-        return res.status(400).json({ error: 'Vulnerability name is required' });
-    }
-    try {
-        const vulnerability = await vulnerabilityService.addVulnerability(name, description, severity, status);
-        logger.info(`Vulnerability added: ${name}`);
-        res.status(201).json(vulnerability);
-    } catch (error) {
-        logger.error(`Error adding vulnerability ${name}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { name, description, severity, status } = req.body;
+  if (!name) throw new HttpError(400, 'Vulnerability name is required', 'VALIDATION');
+  const vulnerability = await vulnerabilityService.addVulnerability(name, description, severity, status);
+  res.status(201).json(vulnerability);
 };
 
 const updateVulnerability = async (req, res) => {
-    const { id } = req.params;
-    const { name, description, severity, status } = req.body;
-    if (!name) {
-        logger.warn(`Attempt to update vulnerability ${id} with missing name.`);
-        return res.status(400).json({ error: 'Vulnerability name is required' });
-    }
-    try {
-        const vulnerability = await vulnerabilityService.updateVulnerability(id, name, description, severity, status);
-        if (!vulnerability) {
-            logger.warn(`Vulnerability ${id} not found for update.`);
-            return res.status(404).json({ error: 'Vulnerability not found' });
-        }
-        logger.info(`Vulnerability updated: ${id}`);
-        res.json(vulnerability);
-    } catch (error) {
-        logger.error(`Error updating vulnerability ${id}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { id } = req.params;
+  const { name, description, severity, status } = req.body;
+  if (!name) throw new HttpError(400, 'Vulnerability name is required', 'VALIDATION');
+  const vulnerability = await vulnerabilityService.updateVulnerability(id, name, description, severity, status);
+  if (!vulnerability) throw new HttpError(404, 'Vulnerability not found', 'NOT_FOUND');
+  res.json(vulnerability);
 };
 
 const deleteVulnerability = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const vulnerability = await vulnerabilityService.deleteVulnerability(id);
-        if (!vulnerability) {
-            logger.warn(`Vulnerability ${id} not found for deletion.`);
-            return res.status(404).json({ error: 'Vulnerability not found' });
-        }
-        logger.info(`Vulnerability deleted: ${id}`);
-        res.status(204).send(); // No Content
-    } catch (error) {
-        logger.error(`Error deleting vulnerability ${id}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { id } = req.params;
+  const vulnerability = await vulnerabilityService.deleteVulnerability(id);
+  if (!vulnerability) throw new HttpError(404, 'Vulnerability not found', 'NOT_FOUND');
+  res.status(204).send();
 };
 
 module.exports = {

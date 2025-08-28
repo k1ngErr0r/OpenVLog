@@ -4,15 +4,68 @@ import { cn } from "@/lib/utils"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto"
-    >
+    <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
       <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
+        className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+        role="table"
+      >
+        <thead className="bg-gray-50 dark:bg-gray-800" role="rowgroup">
+          <tr role="row">
+            {props.columns.map((col: any) => (
+              <th
+                key={col.key}
+                role="columnheader"
+                scope="col"
+                className="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                {col.header}
+              </th>
+            ))}
+            {props.actions && <th className="px-4 py-2" />}
+          </tr>
+        </thead>
+        <tbody
+          className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900"
+          role="rowgroup"
+        >
+          {props.data.length === 0 && (
+            <tr role="row">
+              <td
+                colSpan={
+                  props.columns.length + (props.actions ? 1 : 0)
+                }
+                className="px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                No data
+              </td>
+            </tr>
+          )}
+          {props.data.map((row: any, i: number) => (
+            <tr
+              key={row.id || i}
+              role="row"
+              className="even:bg-gray-50 hover:bg-gray-100 dark:even:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+            >
+              {props.columns.map((col: any) => (
+                <td
+                  key={col.key}
+                  role="cell"
+                  className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                >
+                  {col.render
+                    ? col.render(row[col.key], row)
+                    : (row[col.key] as any)}
+                </td>
+              ))}
+              {props.actions && (
+                <td className="px-4 py-2" role="cell">
+                  {props.actions(row)}
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -55,7 +108,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-gray-100 even:bg-gray-50 data-[state=selected]:bg-gray-200 border-b transition-colors",
         className
       )}
       {...props}

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const winston = require('winston');
+const { HttpError } = require('./error.middleware');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -12,23 +13,27 @@ const logger = winston.createLogger({
     ],
   });
 
-const authenticateToken = (req, res, next) => {
+const verifyToken = (token) => new Promise((resolve, reject) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return reject(err);
+    resolve(user);
+  });
+});
+
+const authenticateToken = async (req, res, next) => {
+  try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
-    if (token == null) {
-        logger.warn('Authentication attempt without token.');
-        return res.sendStatus(401);
+    if (!token) throw new HttpError(401, 'Missing token', 'AUTH');
+    const user = await verifyToken(token);
+    req.user = user;
+    next();
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return next(new HttpError(403, 'Invalid or expired token', 'AUTH')); 
     }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            logger.warn(`Authentication failed: ${err.message}`);
-            return res.sendStatus(403);
-        }
-        req.user = user;
-        next();
-    });
+    next(err);
+  }
 };
 
 module.exports = { authenticateToken };

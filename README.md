@@ -122,6 +122,36 @@ npm install
 npm start
 ```
 
+## Environment Variables
+
+See `.env.example` for a complete list with defaults. Key variables:
+
+| Variable | Description |
+|----------|-------------|
+| POSTGRES_USER | Postgres username (container) |
+| POSTGRES_PASSWORD | Postgres password |
+| POSTGRES_DB | Database name |
+| DATABASE_URL | Connection string used by backend & scripts |
+| JWT_SECRET | Secret for signing JWT tokens |
+| ADMIN_USER | Bootstrap admin username for `create_admin.js` |
+| ADMIN_PASSWORD | Bootstrap admin password for `create_admin.js` |
+| VITE_API_BASE_URL | API base URL injected at frontend build |
+
+## Health Check
+
+Backend exposes `GET /healthz` returning JSON: `{ status: 'ok', uptime, latency_ms }` (500 on failure). The database connectivity is probed with a simple `SELECT 1`.
+
+Example:
+```bash
+curl -s http://localhost:3001/healthz | jq
+```
+
+Nginx (frontend container) also serves a lightweight `/healthz` endpoint for container orchestration probes.
+
+## Container Build Improvements
+
+Backend Dockerfile now uses a multi-stage build with `npm ci --omit=dev` on Alpine for a smaller image and reproducible installs.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.

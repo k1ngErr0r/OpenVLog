@@ -7,22 +7,36 @@ import { UserManagementPage } from "./pages/UserManagementPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { HelpPage } from "./pages/HelpPage";
+import { Header } from "./components/ui/header";
+import { Footer } from "./components/ui/footer";
+import { ToastProvider } from './components/ui/toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
-          <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route element={<AdminRoute />}>
-            <Route path="/users" element={<UserManagementPage />} />
-          </Route>
-        </Route>
-      </Routes>
+      <ToastProvider>
+        <ErrorBoundary>
+          <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+            <Header />
+            <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
+                  <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route element={<AdminRoute />}>
+                    <Route path="/users" element={<UserManagementPage />} />
+                  </Route>
+                </Route>
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </ErrorBoundary>
+      </ToastProvider>
     </Router>
   );
 }

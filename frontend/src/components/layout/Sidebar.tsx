@@ -36,21 +36,22 @@ export function Sidebar() {
   };
 
   const NavLinks = ({ isMobile = false }) => (
-    <nav className={cn('flex flex-col gap-2', isMobile ? 'px-4' : 'px-2')}>
+    <nav className={cn('flex flex-col gap-2', isMobile ? 'px-4' : 'px-2')} aria-label="Main navigation">
       {navItems.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50',
+              'group flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:text-gray-50',
               isActive && 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50',
               isCollapsed && !isMobile ? 'justify-center' : ''
             )
           }
+          aria-current={({ isActive }) => (isActive ? 'page' : undefined) as any}
         >
           {item.icon}
-          <span className={cn(isCollapsed && !isMobile ? 'sr-only' : '')}>{item.label}</span>
+          <span className={cn(isCollapsed && !isMobile ? 'sr-only' : 'transition-opacity group-hover:opacity-100')}>{item.label}</span>
         </NavLink>
       ))}
     </nav>
@@ -64,6 +65,7 @@ export function Sidebar() {
           'hidden md:flex flex-col border-r bg-gray-100/40 dark:bg-gray-800/40 transition-all duration-300',
           isCollapsed ? 'w-20' : 'w-64'
         )}
+        aria-label="Sidebar"
       >
         <div className="flex h-[60px] items-center border-b px-6">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
@@ -81,7 +83,7 @@ export function Sidebar() {
           </Button>
         </div>
         <div className="p-4 border-t">
-          <Button variant="outline" size="icon" onClick={() => setIsCollapsed(!isCollapsed)}>
+          <Button variant="outline" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} aria-pressed={isCollapsed} aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>

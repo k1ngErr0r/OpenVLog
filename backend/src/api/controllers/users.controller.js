@@ -1,5 +1,6 @@
 const winston = require('winston');
 const userService = require('../../services/user.service');
+const { HttpError } = require('../../middleware/error.middleware');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -13,50 +14,27 @@ const logger = winston.createLogger({
   });
 
 const getAllUsers = async (req, res) => {
-    try {
-        const users = await userService.getAllUsers();
-        logger.info('Fetched all users.');
-        res.json(users);
-    } catch (error) {
-        logger.error(`Error fetching users: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const users = await userService.getAllUsers();
+  res.json(users);
 };
 
 const addUser = async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        logger.warn('Attempt to add user with missing username or password.');
-        return res.status(400).json({ error: 'Username and password are required' });
-    }
-    try {
-        const user = await userService.addUser(username, password);
-        logger.info(`User added: ${username}`);
-        res.status(201).json(user);
-    } catch (error) {
-        if (error.code === '23505') {
-            logger.warn(`Add user failed: Username ${username} already exists.`);
-            return res.status(409).json({ error: 'Username already exists' });
-        }
-        logger.error(`Error adding user ${username}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { username, password } = req.body;
+  if (!username || !password) throw new HttpError(400, 'Username and password are required', 'VALIDATION');
+  try {
+    const user = await userService.addUser(username, password);
+    res.status(201).json(user);
+  } catch (error) {
+    if (error.code === '23505') throw new HttpError(409, 'Username already exists', 'DUPLICATE');
+    throw error;
+  }
 };
 
 const deleteUser = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const user = await userService.deleteUser(id);
-        if (!user) {
-            logger.warn(`User ${id} not found for deletion.`);
-            return res.status(404).json({ error: 'User not found' });
-        }
-        logger.info(`User deleted: ${id}`);
-        res.status(204).send(); // No Content
-    } catch (error) {
-        logger.error(`Error deleting user ${id}: ${error.message}`, { stack: error.stack });
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  const { id } = req.params;
+  const user = await userService.deleteUser(id);
+  if (!user) throw new HttpError(404, 'User not found', 'NOT_FOUND');
+  res.status(204).send();
 };
 
 module.exports = {

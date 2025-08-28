@@ -1,21 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api, { useApiWithToasts } from '@/lib/http';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserDataTable } from "@/components/UserDataTable";
-import { type ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { useUserColumns } from '@/hooks/useUserColumns';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from '@/components/ui/toast';
+import { Spinner } from "@/components/ui/spinner";
 
 interface User {
   id: number;
@@ -37,23 +27,20 @@ interface User {
 export function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { push } = useToast();
+  const api = useApiWithToasts();
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,82 +50,32 @@ export function UserManagementPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchUsers(); // Refresh the list
+      await api.delete(`/api/users/${id}`);
+      fetchUsers();
+      push({ type: 'success', message: 'User deleted.' });
     } catch (error) {
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user.");
+      console.error('Error deleting user:', error);
+      push({ type: 'error', message: 'Failed to delete user.' });
     }
   };
 
   const handleAddUser = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users`, newUser, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchUsers(); // Refresh the list
-      setNewUser({ username: "", password: "" }); // Clear the form
+      await api.post('/api/users', newUser);
+      fetchUsers();
+      setNewUser({ username: '', password: '' });
+      push({ type: 'success', message: 'User added.' });
     } catch (error) {
-      console.error("Error adding user:", error);
-      alert("Failed to add user.");
+      console.error('Error adding user:', error);
+      push({ type: 'error', message: 'Failed to add user.' });
     }
   };
 
-  const columns: ColumnDef<User>[] = [
-    {
-      accessorKey: "username",
-      header: "Username",
-    },
-    {
-      accessorKey: "is_admin",
-      header: "Role",
-      cell: ({ row }: any) => {
-        const isAdmin = row.getValue("is_admin");
-        return <Badge variant={isAdmin ? "destructive" : "secondary"}>{isAdmin ? "Admin" : "User"}</Badge>;
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }: any) => {
-        const user = row.original;
-        return (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the user.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(user.id)}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        );
-      },
-    },
-  ];
+  const columns = useUserColumns({ onDelete: handleDelete });
+
+  if (loading) {
+    return <div role="status" aria-busy="true" className="flex justify-center py-10"><Spinner /></div>;
+  }
 
   return (
     <div>

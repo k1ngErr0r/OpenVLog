@@ -5,20 +5,13 @@ const winston = require('winston');
 const authRoutes = require('./api/routes/auth.routes');
 const userRoutes = require('./api/routes/users.routes');
 const vulnerabilityRoutes = require('./api/routes/vulnerabilities.routes');
+const { errorHandler } = require('./middleware/error.middleware');
+const requestId = require('./middleware/requestId.middleware');
+const logger = require('./logger');
 
 const app = express();
 
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-  ],
-});
-
+app.use(requestId);
 app.use(express.json());
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -31,5 +24,20 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.get('/', (req, res) => {
   res.send('Hello from the OpenVLog backend!');
 });
+
+app.get('/healthz', async (req, res) => {
+  const start = Date.now();
+  try {
+    // Optional DB probe if pool available
+    const pool = require('./config/db');
+    await pool.query('SELECT 1');
+    return res.json({ status: 'ok', uptime: process.uptime(), latency_ms: Date.now() - start });
+  } catch (err) {
+    return res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+// Error handler (after routes)
+app.use(errorHandler);
 
 module.exports = app;
