@@ -62,23 +62,23 @@ From the project root directory, run the following command to build the Docker i
 docker-compose up --build
 ```
 
-### 4. Create the Admin User
+### 4. First-Run Web Setup (Admin User)
 
-After the services are up and running, you need to create an initial admin user. Open a **new terminal window** in the project root and run:
+When the application starts with an empty `users` table, navigating to the frontend will automatically redirect you to an **Initial Setup** page. Provide a username and strong password to create the first administrator. Afterwards you'll be redirected to the login page.
+
+If the setup page does not appear (e.g., database was partially initialized) or you prefer a CLI method, you can still use the legacy script:
 
 ```bash
 docker-compose exec backend node create_admin.js
 ```
 
-You should see a message `Admin user created successfully.`
-
 ### 5. Access the Application
 
-Once all services are running, you can access the OpenVLog application in your web browser at:
+Once all services are running (and initial admin is created), access OpenVLog at:
 
 [http://localhost:5173](http://localhost:5173)
 
-Log in with the admin credentials you set in the `.env` file.
+Log in with the credentials you created during the setup step (or via the script fallback).
 
 ## API Endpoints
 
@@ -133,8 +133,8 @@ See `.env.example` for a complete list with defaults. Key variables:
 | POSTGRES_DB | Database name |
 | DATABASE_URL | Connection string used by backend & scripts |
 | JWT_SECRET | Secret for signing JWT tokens |
-| ADMIN_USER | Bootstrap admin username for `create_admin.js` |
-| ADMIN_PASSWORD | Bootstrap admin password for `create_admin.js` |
+| ADMIN_USER | (Legacy) Bootstrap admin username for `create_admin.js` fallback |
+| ADMIN_PASSWORD | (Legacy) Bootstrap admin password for `create_admin.js` fallback |
 | VITE_API_BASE_URL | API base URL injected at frontend build |
 
 ## Health Check

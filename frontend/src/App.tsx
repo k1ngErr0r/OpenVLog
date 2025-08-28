@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
+import { SetupPage } from './pages/SetupPage';
 import { DashboardPage } from "./pages/DashboardPage";
 import { AddVulnerabilityPage } from "./pages/AddVulnerabilityPage";
 import { EditVulnerabilityPage } from "./pages/EditVulnerabilityPage";
@@ -22,6 +23,7 @@ function App() {
             <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/setup" element={<SetupPage />} />
                 <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<DashboardPage />} />
                   <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApiWithToasts } from '@/lib/http';
 import { useToast } from '@/components/ui/toast';
@@ -13,6 +13,21 @@ export function LoginPage() {
   const navigate = useNavigate();
   const api = useApiWithToasts();
   const { push } = useToast();
+
+  // On mount, check if app needs initial setup
+  useEffect(() => {
+    (async () => {
+      try {
+        const resp = await api.get('/api/setup/status');
+        if (resp.data.needsSetup) {
+          navigate('/setup');
+        }
+      } catch (err) {
+        // Non-fatal; allow normal login attempt
+        console.warn('Failed to check setup status', err);
+      }
+    })();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
