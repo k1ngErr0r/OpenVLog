@@ -12,6 +12,7 @@ import { Header } from "./components/ui/header";
 import { Footer } from "./components/ui/footer";
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SetupGuard } from './components/SetupGuard';
 
 function App() {
   return (
@@ -21,19 +22,21 @@ function App() {
           <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
             <Header />
             <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/setup" element={<SetupPage />} />
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
-                  <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
-                  <Route path="/help" element={<HelpPage />} />
-                  <Route element={<AdminRoute />}>
-                    <Route path="/users" element={<UserManagementPage />} />
+              <SetupGuard>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/setup" element={<SetupPage />} />
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<DashboardPage />} />
+                    <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
+                    <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
+                    <Route path="/help" element={<HelpPage />} />
+                    <Route element={<AdminRoute />}>
+                      <Route path="/users" element={<UserManagementPage />} />
+                    </Route>
                   </Route>
-                </Route>
-              </Routes>
+                </Routes>
+              </SetupGuard>
             </main>
             <Footer />
           </div>

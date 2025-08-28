@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useApiWithToasts } from '@/lib/http';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { isAdmin } from '@/lib/auth';
 import { VulnerabilityDataTable } from "@/components/VulnerabilityDataTable";
 import { useVulnerabilityColumns } from '@/hooks/useVulnerabilityColumns';
 import { useToast } from '@/components/ui/toast';
@@ -52,7 +53,7 @@ export function DashboardPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Vulnerability Dashboard</h1>
-        <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>
+  {isAdmin() && <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>}
       </div>
       <VulnerabilityDataTable
         columns={columns}

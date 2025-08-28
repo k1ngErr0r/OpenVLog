@@ -86,7 +86,10 @@ The backend API is accessible at `http://localhost:3001`.
 
 ### Authentication
 - `POST /api/auth/register`: Register a new user.
-- `POST /api/auth/login`: Log in and receive a JWT.
+- `POST /api/auth/login`: Log in and receive `{ token, user }` where `user = { id, username, isAdmin }`.
+- `POST /api/auth/refresh`: Uses httpOnly refresh cookie; returns `{ token, user }`.
+- `GET /api/auth/me`: Returns the current authenticated user `{ id, username, isAdmin }`.
+- `POST /api/auth/logout`: Invalidates refresh cookie (client also clears cached `{ token, user }`).
 
 ### Vulnerabilities
 - `GET /api/vulnerabilities`: Get all vulnerabilities.
@@ -94,11 +97,17 @@ The backend API is accessible at `http://localhost:3001`.
 - `POST /api/vulnerabilities`: Add a new vulnerability (Admin only).
 - `PUT /api/vulnerabilities/:id`: Update a vulnerability (Admin only).
 - `DELETE /api/vulnerabilities/:id`: Delete a vulnerability (Admin only).
+- UI automatically hides create/delete actions for non‑admin users.
+
+Allowed field values:
+- severity: `Critical`, `High`, `Medium`, `Low`, `Informational`
+- status: `Open`, `In Progress`, `Resolved`, `Closed`
 
 ### User Management
 - `GET /api/users`: Get all users (Admin only).
 - `POST /api/users`: Add a new user (Admin only).
 - `DELETE /api/users/:id`: Delete a user (Admin only).
+	(Non‑admins will not see the Add User button.)
 
 ## Development
 
@@ -133,9 +142,11 @@ See `.env.example` for a complete list with defaults. Key variables:
 | POSTGRES_DB | Database name |
 | DATABASE_URL | Connection string used by backend & scripts |
 | JWT_SECRET | Secret for signing JWT tokens |
+| JWT_REFRESH_SECRET | Secret for signing refresh JWT tokens (different from JWT_SECRET) |
 | ADMIN_USER | (Legacy) Bootstrap admin username for `create_admin.js` fallback |
 | ADMIN_PASSWORD | (Legacy) Bootstrap admin password for `create_admin.js` fallback |
 | VITE_API_BASE_URL | API base URL injected at frontend build |
+| FRONTEND_ORIGIN | Allowed origin for CORS (defaults to http://localhost:5173) |
 
 ## Health Check
 

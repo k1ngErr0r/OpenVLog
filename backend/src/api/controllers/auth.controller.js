@@ -49,7 +49,7 @@ const login = async (req, res) => {
   if (!user) throw new HttpError(401, 'Invalid credentials', 'AUTH');
   const { accessToken, refreshToken } = issueTokens(user);
   setRefreshCookie(res, refreshToken);
-  res.json({ token: accessToken });
+  res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
 };
 
 const refresh = async (req, res) => {
@@ -63,7 +63,7 @@ const refresh = async (req, res) => {
     if (!user) throw new HttpError(401, 'User no longer exists', 'AUTH');
     const { accessToken, refreshToken } = issueTokens(user);
     setRefreshCookie(res, refreshToken);
-    res.json({ token: accessToken });
+  res.json({ token: accessToken, user: { id: user.id, username: user.username, isAdmin: user.is_admin } });
   } catch (err) {
     throw new HttpError(401, 'Invalid refresh token', 'AUTH');
   }
@@ -74,9 +74,17 @@ const logout = async (_req, res) => {
   res.status(204).send();
 };
 
+const me = async (req, res) => {
+  // authenticateToken middleware populates req.user (add in routes)
+  const user = await userService.getUserById(req.user.userId);
+  if (!user) throw new HttpError(404, 'User not found', 'NOT_FOUND');
+  res.json({ id: user.id, username: user.username, isAdmin: user.is_admin });
+};
+
 module.exports = {
   register,
   login,
   refresh,
   logout,
+  me,
 };

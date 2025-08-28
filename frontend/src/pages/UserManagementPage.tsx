@@ -28,6 +28,7 @@ export function UserManagementPage() {
   const [newUser, setNewUser] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const { push } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const api = useApiWithToasts();
 
   const fetchUsers = async () => {
@@ -60,12 +61,19 @@ export function UserManagementPage() {
   const handleAddUser = async () => {
     try {
       await api.post('/api/users', newUser);
-      fetchUsers();
+      await fetchUsers();
       setNewUser({ username: '', password: '' });
       push({ type: 'success', message: 'User added.' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding user:', error);
-      push({ type: 'error', message: 'Failed to add user.' });
+      const status = error?.response?.status;
+      if (status === 403) {
+        push({ type: 'error', message: 'Forbidden: admin role required.' });
+      } else if (status === 409) {
+        push({ type: 'error', message: 'Username already exists.' });
+      } else {
+        push({ type: 'error', message: 'Failed to add user.' });
+      }
     }
   };
 
@@ -79,14 +87,14 @@ export function UserManagementPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add New User</Button>
+            <Button onClick={() => setDialogOpen(true)}>Add New User</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px]" aria-describedby="add-user-desc">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="add-user-desc">
                 Create a new user. Click save when you're done.
               </DialogDescription>
             </DialogHeader>
@@ -116,7 +124,7 @@ export function UserManagementPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleAddUser}>Save changes</Button>
+              <Button type="submit" onClick={async () => { await handleAddUser(); setDialogOpen(false); }}>Save changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

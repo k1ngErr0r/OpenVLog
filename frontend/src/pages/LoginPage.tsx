@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApiWithToasts } from '@/lib/http';
 import { useToast } from '@/components/ui/toast';
@@ -14,31 +14,18 @@ export function LoginPage() {
   const api = useApiWithToasts();
   const { push } = useToast();
 
-  // On mount, check if app needs initial setup
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await api.get('/api/setup/status');
-        if (resp.data.needsSetup) {
-          navigate('/setup');
-        }
-      } catch (err) {
-        // Non-fatal; allow normal login attempt
-        console.warn('Failed to check setup status', err);
-      }
-    })();
-  }, []);
+  // Setup status now handled globally by SetupGuard
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await api.post(`/api/auth/login`, {
-        username,
-        password,
-      });
+      const response = await api.post(`/api/auth/login`, { username, password });
       localStorage.setItem("token", response.data.token);
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
       // Persist dark mode preference if set
       const darkPref = localStorage.getItem('theme');
       if (darkPref === 'dark') {
@@ -65,9 +52,7 @@ export function LoginPage() {
             </a>
           </p>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-6 text-center">
-          Login
-        </h1>
+  <h1 className="text-2xl font-bold text-white mb-6 text-center">Login</h1>
         <form onSubmit={handleLogin} className="space-y-4" aria-describedby={error ? 'login-error' : undefined} noValidate>
           <div>
             <Label htmlFor="username" className="text-white">

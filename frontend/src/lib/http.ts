@@ -25,7 +25,13 @@ const processQueue = (error: any, token?: string) => {
 };
 
 api.interceptors.response.use(
-  resp => resp,
+  resp => {
+    // Cache user object if auth endpoints return it
+    if (resp.config?.url?.includes('/api/auth/') && resp.data?.user) {
+      try { localStorage.setItem('user', JSON.stringify(resp.data.user)); } catch {/* ignore */}
+    }
+    return resp;
+  },
   async error => {
     const originalConfig = error.config;
     const status = error.response?.status;

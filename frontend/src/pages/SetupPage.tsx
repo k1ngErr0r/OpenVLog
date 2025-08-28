@@ -71,12 +71,12 @@ export function SetupPage() {
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
             <Label htmlFor="username" className="text-white">Username</Label>
-            <Input id="username" value={username} onChange={e=>setUsername(e.target.value)} required placeholder="admin" />
+            <Input id="username" value={username} onChange={e=>setUsername(e.target.value)} required placeholder="admin" autoFocus />
           </div>
           <div>
             <Label htmlFor="password" className="text-white">Password</Label>
-            <Input id="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Strong password" />
-            <p className="text-xs text-gray-400 mt-1">Must meet password policy requirements.</p>
+            <Input id="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Strong password" minLength={12} />
+            <p className="text-xs text-gray-400 mt-1">At least 12 chars incl upper, lower, number & symbol.</p>
           </div>
             <div>
             <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>

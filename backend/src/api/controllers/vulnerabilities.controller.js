@@ -25,9 +25,13 @@ const getVulnerabilityById = async (req, res) => {
   res.json(vulnerability);
 };
 
+const { VALID_SEVERITIES, VALID_STATUS } = require('../../constants/vulnerabilities');
+
 const addVulnerability = async (req, res) => {
   const { name, description, severity, status } = req.body;
   if (!name) throw new HttpError(400, 'Vulnerability name is required', 'VALIDATION');
+  if (severity && !VALID_SEVERITIES.includes(severity)) throw new HttpError(400, 'Invalid severity', 'VALIDATION');
+  if (status && !VALID_STATUS.includes(status)) throw new HttpError(400, 'Invalid status', 'VALIDATION');
   const vulnerability = await vulnerabilityService.addVulnerability(name, description, severity, status);
   res.status(201).json(vulnerability);
 };
@@ -36,6 +40,8 @@ const updateVulnerability = async (req, res) => {
   const { id } = req.params;
   const { name, description, severity, status } = req.body;
   if (!name) throw new HttpError(400, 'Vulnerability name is required', 'VALIDATION');
+  if (severity && !VALID_SEVERITIES.includes(severity)) throw new HttpError(400, 'Invalid severity', 'VALIDATION');
+  if (status && !VALID_STATUS.includes(status)) throw new HttpError(400, 'Invalid status', 'VALIDATION');
   const vulnerability = await vulnerabilityService.updateVulnerability(id, name, description, severity, status);
   if (!vulnerability) throw new HttpError(404, 'Vulnerability not found', 'NOT_FOUND');
   res.json(vulnerability);

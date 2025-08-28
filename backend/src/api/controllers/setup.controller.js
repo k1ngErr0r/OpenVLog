@@ -15,6 +15,7 @@ const initialize = async (req, res) => {
   if (!username || !password) throw new HttpError(400, 'Username and password required', 'VALIDATION');
   const hash = await bcrypt.hash(password, 10);
   const insert = await pool.query('INSERT INTO users (username, password_hash, is_admin) VALUES ($1, $2, TRUE) RETURNING id, username, is_admin', [username, hash]);
+  console.log('[setup] Initial admin created:', insert.rows[0].username, 'id=', insert.rows[0].id);
   res.status(201).json({ admin: insert.rows[0] });
 };
 
