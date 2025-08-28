@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useApiWithToasts } from '@/lib/http';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -20,16 +20,28 @@ export function Notifications() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
+    const [authError, setAuthError] = useState(false);
+    const pollRef = useRef<number | null>(null);
     const api = useApiWithToasts();
 
+    const clearPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+
     const fetchNotifications = async () => {
+        if (authError) return; // do not continue after auth failure
         setLoading(true);
         try {
             const response = await api.get('/api/notifications');
             setNotifications(response.data.notifications);
             setUnreadCount(response.data.unreadCount);
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
+            if (authError) setAuthError(false);
+        } catch (error: any) {
+            // If unauthorized, stop polling quietly
+            if (error?.response?.status === 401) {
+                setAuthError(true);
+                clearPoll();
+            } else {
+                console.error('Error fetching notifications:', error);
+            }
         } finally {
             setLoading(false);
         }
@@ -37,8 +49,8 @@ export function Notifications() {
 
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000); // Poll every 60 seconds
-        return () => clearInterval(interval);
+        pollRef.current = window.setInterval(fetchNotifications, 60000); // Poll every 60 seconds
+        return () => clearPoll();
     }, []);
 
     const handleMarkAsRead = async (notificationId: number) => {
@@ -46,25 +58,25 @@ export function Notifications() {
             await api.post(`/api/notifications/${notificationId}/read`);
             fetchNotifications();
         } catch (error) {
-            console.error("Error marking notification as read:", error);
+            console.error('Error marking notification as read:', error);
         }
     };
-    
+
     const handleMarkAllAsRead = async () => {
         try {
             await api.post('/api/notifications/read-all');
             fetchNotifications();
         } catch (error) {
-            console.error("Error marking all notifications as read:", error);
+            console.error('Error marking all notifications as read:', error);
         }
     };
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-full">
+                <Button variant="ghost" size="icon" className="relative rounded-full" disabled={authError} aria-disabled={authError}>
                     <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
+                    {unreadCount > 0 && !authError && (
                         <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" />
                     )}
                     <span className="sr-only">Toggle notifications</span>
@@ -74,7 +86,7 @@ export function Notifications() {
                 <div className="grid gap-4">
                     <div className="flex justify-between items-center">
                         <h4 className="font-medium leading-none">Notifications</h4>
-                        {unreadCount > 0 && (
+                        {!authError && unreadCount > 0 && (
                             <Button variant="link" size="sm" onClick={handleMarkAllAsRead} className="-mr-2">
                                 <CheckCheck className="mr-1 h-4 w-4" />
                                 Mark all as read
@@ -82,7 +94,9 @@ export function Notifications() {
                         )}
                     </div>
                     <div className="grid gap-2 max-h-96 overflow-y-auto">
-                        {loading ? (
+                        {authError ? (
+                            <p className="text-sm text-center text-muted-foreground py-4">Sign in to view notifications.</p>
+                        ) : loading ? (
                             <div className="flex justify-center py-4"><Spinner /></div>
                         ) : notifications.length > 0 ? (
                             notifications.map((notification) => (

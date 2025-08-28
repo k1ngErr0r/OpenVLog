@@ -112,7 +112,7 @@ const refresh = async (req, res) => {
   }
 };
 
-const logout = async (_req, res) => {
+const logout = async (req, res) => {
   res.clearCookie('refresh_token', { path: '/api/auth' });
   authMetrics.logout.inc();
   logger.info('auth.logout', { userId: req.user?.userId, ip: req.ip });

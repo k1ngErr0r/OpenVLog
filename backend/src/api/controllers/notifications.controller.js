@@ -3,6 +3,7 @@ const { HttpError } = require('../../middleware/error.middleware');
 
 const getNotifications = async (req, res, next) => {
     try {
+        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
         const notifications = await notificationService.getNotificationsByUserId(req.user.id);
         const unreadCount = await notificationService.getUnreadNotificationCount(req.user.id);
         res.json({
@@ -16,6 +17,7 @@ const getNotifications = async (req, res, next) => {
 
 const markNotificationAsRead = async (req, res, next) => {
     try {
+        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
         const { notificationId } = req.params;
         const notification = await notificationService.markAsRead(notificationId, req.user.id);
         if (!notification) {
@@ -29,6 +31,7 @@ const markNotificationAsRead = async (req, res, next) => {
 
 const markAllNotificationsAsRead = async (req, res, next) => {
     try {
+        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
         await notificationService.markAllAsRead(req.user.id);
         res.status(204).send();
     } catch (error) {
