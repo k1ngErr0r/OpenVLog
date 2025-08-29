@@ -9,8 +9,10 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies (clean, deterministic)
-RUN npm ci --no-audit --no-fund
+# Install dependencies
+# Using npm install temporarily due to prior upstream tarball integrity errors in CI environment.
+# Revert to `npm ci` for stricter reproducibility after stability is confirmed.
+RUN npm install --no-audit --no-fund
 
 # Copy the rest of the application files
 COPY . .
