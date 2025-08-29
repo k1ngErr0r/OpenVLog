@@ -1,15 +1,15 @@
 const notificationService = require('../../services/notification.service');
 const { HttpError } = require('../../middleware/error.middleware');
 
+const currentUserId = (req) => req.user && (req.user.userId || req.user.id); // fallback if legacy
+
 const getNotifications = async (req, res, next) => {
     try {
-        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
-        const notifications = await notificationService.getNotificationsByUserId(req.user.id);
-        const unreadCount = await notificationService.getUnreadNotificationCount(req.user.id);
-        res.json({
-            notifications,
-            unreadCount,
-        });
+        const uid = currentUserId(req);
+        if (!uid) throw new HttpError(401, 'Unauthorized', 'AUTH');
+        const notifications = await notificationService.getNotificationsByUserId(uid);
+        const unreadCount = await notificationService.getUnreadNotificationCount(uid);
+        res.json({ notifications, unreadCount });
     } catch (error) {
         next(error);
     }
@@ -17,12 +17,11 @@ const getNotifications = async (req, res, next) => {
 
 const markNotificationAsRead = async (req, res, next) => {
     try {
-        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
+        const uid = currentUserId(req);
+        if (!uid) throw new HttpError(401, 'Unauthorized', 'AUTH');
         const { notificationId } = req.params;
-        const notification = await notificationService.markAsRead(notificationId, req.user.id);
-        if (!notification) {
-            throw new HttpError(404, 'Notification not found or you do not have permission to read it.', 'NOT_FOUND');
-        }
+        const notification = await notificationService.markAsRead(notificationId, uid);
+        if (!notification) throw new HttpError(404, 'Notification not found or you do not have permission to read it.', 'NOT_FOUND');
         res.json(notification);
     } catch (error) {
         next(error);
@@ -31,16 +30,13 @@ const markNotificationAsRead = async (req, res, next) => {
 
 const markAllNotificationsAsRead = async (req, res, next) => {
     try {
-        if (!req.user?.id) throw new HttpError(401, 'Unauthorized', 'AUTH');
-        await notificationService.markAllAsRead(req.user.id);
+        const uid = currentUserId(req);
+        if (!uid) throw new HttpError(401, 'Unauthorized', 'AUTH');
+        await notificationService.markAllAsRead(uid);
         res.status(204).send();
     } catch (error) {
         next(error);
     }
 };
 
-module.exports = {
-    getNotifications,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
-};
+module.exports = { getNotifications, markNotificationAsRead, markAllNotificationsAsRead };
