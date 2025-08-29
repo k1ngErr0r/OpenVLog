@@ -1,0 +1,17 @@
+# Root dockerignore
+**/node_modules
+**/dist
+**/build
+.git
+.gitignore
+Dockerfile
+**/Dockerfile
+npm-debug.log*
+yarn-error.log*
+.env
+**/.env.local
+**/.DS_Store
+frontend/coverage
+backend/coverage
+**/tmp
+**/.vite

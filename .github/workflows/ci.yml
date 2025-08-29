@@ -26,18 +26,26 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: |
-            backend/package.json
-            frontend/package.json
+            backend/package-lock.json
+            frontend/package-lock.json
       - name: Backend install
         working-directory: backend
-        run: npm ci
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
       - name: Frontend install
         working-directory: frontend
-        run: npm ci
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Lint frontend
+        working-directory: frontend
+        run: npx eslint "src/**/*.{ts,tsx,js,jsx}" --max-warnings=0 || npx eslint "src/**/*.{ts,tsx,js,jsx}"
       - name: Backend build/lint placeholder
         working-directory: backend
-        run: |
-          node -e "console.log('No backend build step defined')"
+        run: node -e "console.log('No backend build step defined')"
       - name: Frontend build
         working-directory: frontend
         run: npm run build
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 5

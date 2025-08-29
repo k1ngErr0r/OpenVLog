@@ -19,20 +19,18 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
-            radix: [
-              '@radix-ui/react-label',
-              '@radix-ui/react-select',
-              '@radix-ui/react-slot',
-              '@radix-ui/react-accordion',
-              '@radix-ui/react-alert-dialog',
-              '@radix-ui/react-dialog',
-              '@radix-ui/react-dropdown-menu'
-            ],
-            forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-            vendor: ['axios', 'clsx', 'class-variance-authority', 'jwt-decode', 'lucide-react', '@tanstack/react-table']
-          }
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.match(/react(|-dom|-router-dom)/)) return 'react';
+              if (id.includes('@radix-ui')) return 'radix';
+              if (id.match(/react-hook-form|@hookform|zod/)) return 'forms';
+              if (id.match(/pdfkit|qrcode|otplib/)) return 'aux';
+              if (id.match(/@tanstack|axios|jwt-decode|lucide-react|class-variance-authority|clsx/)) return 'vendor';
+            }
+          },
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]'
         }
       }
     }
