@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import Joyride, { CallBackProps, Step } from 'react-joyride';
+import Joyride from 'react-joyride';
+import type { CallBackProps, Step } from 'react-joyride';
 
 const steps: Step[] = [
   { target: 'body', placement: 'center', content: 'Welcome to OpenVLog! Let\'s take a quick tour.' },
