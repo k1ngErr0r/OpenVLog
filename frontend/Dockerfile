@@ -9,8 +9,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (clean, deterministic)
+RUN npm ci --no-audit --no-fund
 
 # Copy the rest of the application files
 COPY . .
