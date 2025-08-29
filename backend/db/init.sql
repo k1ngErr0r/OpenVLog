@@ -2,7 +2,9 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    is_admin BOOLEAN DEFAULT FALSE
+    is_admin BOOLEAN DEFAULT FALSE,
+    two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    two_factor_secret TEXT NULL
 );
 
 CREATE TABLE vulnerabilities (

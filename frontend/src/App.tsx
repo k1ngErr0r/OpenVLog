@@ -16,36 +16,41 @@ import { Footer } from "./components/ui/footer";
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SetupGuard } from './components/SetupGuard';
+import { CommandPaletteProvider } from './components/command-palette/CommandPaletteProvider';
+import { OnboardingTour } from './components/onboarding/OnboardingTour';
 
 function App() {
   return (
     <Router>
       <ToastProvider>
         <ErrorBoundary>
-          <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-            <Header />
-            <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
-              <SetupGuard>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  <Route path="/setup" element={<SetupPage />} />
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<DashboardPage />} />
-                    <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
-                    <Route path="/vulnerabilities/:id" element={<VulnerabilityDetailPage />} />
-                    <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
-                    <Route path="/help" element={<HelpPage />} />
-                    <Route element={<AdminRoute />}>
-                      <Route path="/users" element={<UserManagementPage />} />
+          <CommandPaletteProvider>
+            <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+              <Header />
+              <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
+                <SetupGuard>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/setup" element={<SetupPage />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/" element={<DashboardPage />} />
+                      <Route path="/vulnerabilities/new" element={<AddVulnerabilityPage />} />
+                      <Route path="/vulnerabilities/:id" element={<VulnerabilityDetailPage />} />
+                      <Route path="/vulnerabilities/:id/edit" element={<EditVulnerabilityPage />} />
+                      <Route path="/help" element={<HelpPage />} />
+                      <Route element={<AdminRoute />}>
+                        <Route path="/users" element={<UserManagementPage />} />
+                      </Route>
                     </Route>
-                  </Route>
-                </Routes>
-              </SetupGuard>
-            </main>
-            <Footer />
-          </div>
+                  </Routes>
+                </SetupGuard>
+              </main>
+              <Footer />
+              <OnboardingTour />
+            </div>
+          </CommandPaletteProvider>
         </ErrorBoundary>
       </ToastProvider>
     </Router>

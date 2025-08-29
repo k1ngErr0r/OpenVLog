@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const notificationsController = require('../controllers/notifications.controller');
+const { notificationsStream } = require('../controllers/notifications.stream.controller');
 const { authenticateToken } = require('../../middleware/auth.middleware');
 
 /**
@@ -48,6 +49,8 @@ const { authenticateToken } = require('../../middleware/auth.middleware');
  *         description: Unauthorized.
  */
 router.get('/', authenticateToken, notificationsController.getNotifications);
+// SSE realtime stream
+router.get('/stream', authenticateToken, notificationsStream);
 
 /**
  * @swagger

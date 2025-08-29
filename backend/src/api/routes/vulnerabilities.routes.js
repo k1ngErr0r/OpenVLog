@@ -4,8 +4,8 @@ const vulnerabilitiesController = require('../controllers/vulnerabilities.contro
 const commentsRoutes = require('./comments.routes');
 const { authenticateToken } = require('../../middleware/auth.middleware');
 const { isAdmin } = require('../../middleware/admin.middleware');
-// Attachments router (mounted under nested path)
-const vulnerabilityAttachmentsRoutes = require('./attachments.routes');
+// Vulnerability-scoped attachments router (list & upload)
+const vulnerabilityAttachmentsRoutes = require('./vulnerabilityAttachments.routes');
 
 /**
  * @swagger
@@ -368,7 +368,7 @@ router.delete('/:id', [authenticateToken, isAdmin], vulnerabilitiesController.de
 // Nested comments
 router.use('/:vulnerabilityId/comments', commentsRoutes);
 
-// Nested attachments
+// Nested attachments (list & upload). Download & delete use top-level /api/attachments.
 router.use('/:vulnerabilityId/attachments', vulnerabilityAttachmentsRoutes);
 
 module.exports = router;

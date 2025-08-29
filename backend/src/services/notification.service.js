@@ -1,12 +1,38 @@
 const pool = require('../config/db');
 
+// Simple in-process subscribers map for SSE (user_id => Set<function(notification)>)
+const subscribers = new Map();
+
+const subscribe = (userId, fn) => {
+    if (!subscribers.has(userId)) subscribers.set(userId, new Set());
+    subscribers.get(userId).add(fn);
+    return () => {
+        const set = subscribers.get(userId);
+        if (set) {
+            set.delete(fn);
+            if (!set.size) subscribers.delete(userId);
+        }
+    };
+};
+
+const publish = (userId, notification) => {
+    const set = subscribers.get(userId);
+    if (set) {
+        for (const fn of set) {
+            try { fn(notification); } catch (_) { /* ignore individual errors */ }
+        }
+    }
+};
+
 const createNotification = async (user_id, message, link) => {
-    // In a real-world app, you might also push to a WebSocket or other real-time service here
     const result = await pool.query(
         'INSERT INTO notifications (user_id, message, link) VALUES ($1, $2, $3) RETURNING *',
         [user_id, message, link]
     );
-    return result.rows[0];
+    const n = result.rows[0];
+    // Push to any SSE subscribers
+    publish(user_id, n);
+    return n;
 };
 
 const getNotificationsByUserId = async (user_id) => {
@@ -47,4 +73,5 @@ module.exports = {
     getUnreadNotificationCount,
     markAsRead,
     markAllAsRead,
+    subscribe,
 };

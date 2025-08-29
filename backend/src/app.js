@@ -9,6 +9,8 @@ const userRoutes = require('./api/routes/users.routes');
 const vulnerabilityRoutes = require('./api/routes/vulnerabilities.routes');
 const attachmentsRoutes = require('./api/routes/attachments.routes.js');
 const notificationsRoutes = require('./api/routes/notifications.routes.js');
+const twofaRoutes = require('./api/routes/twofa.routes.js');
+const reportRoutes = require('./api/routes/report.routes.js');
 const setupRoutes = require('./api/routes/setup.routes');
 const versionRoutes = require('./api/routes/version.routes');
 const { errorHandler } = require('./middleware/error.middleware');
@@ -128,6 +130,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/attachments', attachmentsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/2fa', twofaRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from the OpenVLog backend!');

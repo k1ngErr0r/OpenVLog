@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useApiWithToasts } from '@/lib/http';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -7,13 +7,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
-interface Notification {
-    id: number;
-    message: string;
-    link: string;
-    is_read: boolean;
-    created_at: string;
-}
+import { useNotificationStream } from '@/hooks/useNotificationStream';
+import type { NotificationItem as Notification } from '@/hooks/useNotificationStream';
 
 export function Notifications() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -21,42 +16,36 @@ export function Notifications() {
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [authError, setAuthError] = useState(false);
-    const pollRef = useRef<number | null>(null);
+    const stream = useNotificationStream(!authError);
     const api = useApiWithToasts();
 
-    const clearPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
-
-    const fetchNotifications = async () => {
-        if (authError) return; // do not continue after auth failure
-        setLoading(true);
-        try {
-            const response = await api.get('/api/notifications');
-            setNotifications(response.data.notifications);
-            setUnreadCount(response.data.unreadCount);
-            if (authError) setAuthError(false);
-        } catch (error: any) {
-            // If unauthorized, stop polling quietly
-            if (error?.response?.status === 401) {
-                setAuthError(true);
-                clearPoll();
-            } else {
-                console.error('Error fetching notifications:', error);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchNotifications();
-        pollRef.current = window.setInterval(fetchNotifications, 60000); // Poll every 60 seconds
-        return () => clearPoll();
-    }, []);
+        // When stream has data, sync local state
+        if (stream.notifications.length) {
+            setNotifications(stream.notifications);
+            setUnreadCount(stream.unreadCount);
+            setLoading(false);
+        } else if (stream.error && !notifications.length) {
+            // Fallback: single REST fetch (no interval) if stream fails
+            (async () => {
+                try {
+                    const response = await api.get('/api/notifications');
+                    setNotifications(response.data.notifications);
+                    setUnreadCount(response.data.unreadCount);
+                    setLoading(false);
+                } catch (e:any) {
+                    if (e?.response?.status === 401) setAuthError(true);
+                    setLoading(false);
+                }
+            })();
+        }
+    }, [stream.notifications, stream.unreadCount, stream.error]);
 
     const handleMarkAsRead = async (notificationId: number) => {
         try {
             await api.post(`/api/notifications/${notificationId}/read`);
-            fetchNotifications();
+            setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
+            setUnreadCount(c => Math.max(0, c - 1));
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
@@ -65,7 +54,8 @@ export function Notifications() {
     const handleMarkAllAsRead = async () => {
         try {
             await api.post('/api/notifications/read-all');
-            fetchNotifications();
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setUnreadCount(0);
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
         }
