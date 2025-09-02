@@ -1,7 +1,7 @@
 {
   "name": "openvlog-root",
   "private": true,
-  "description": "Developer convenience scripts for OpenVLog",
+  "description": "Developer convenience scripts for OpenVulog",
   "scripts": {
     "bootstrap": "npm --prefix backend install && npm --prefix frontend install",
     "build": "docker-compose build",

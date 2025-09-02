@@ -1,9 +1,9 @@
 # ---------- Base dependencies stage ----------
 FROM node:20.16-alpine AS deps
 # consider updating to latest patch for security fixes
-LABEL org.opencontainers.image.source="https://github.com/k1ngErr0r/OpenVLog" \
-      org.opencontainers.image.title="OpenVLog Backend" \
-      org.opencontainers.image.description="Backend service for OpenVLog vulnerability tracking" \
+LABEL org.opencontainers.image.source="https://github.com/k1ngErr0r/OpenVulog" \
+      org.opencontainers.image.title="OpenVulog Backend" \
+      org.opencontainers.image.description="Backend service for OpenVulog vulnerability tracking" \
       org.opencontainers.image.licenses="MIT"
 WORKDIR /app
 COPY package*.json ./

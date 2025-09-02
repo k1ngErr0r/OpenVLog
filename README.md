@@ -1,6 +1,6 @@
-# OpenVLog: Vulnerability Logging and Tracking Tool
+# OpenVulog: Vulnerability Logging and Tracking Tool
 
-OpenVLog is a web-based tool designed for logging and tracking security vulnerabilities. It provides a centralized platform for security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.
+OpenVulog is a web-based tool designed for logging and tracking security vulnerabilities. It provides a centralized platform for security teams to manage vulnerabilities, track their status, and ensure they are addressed in a timely manner.
 
 ## Features
 
@@ -38,7 +38,7 @@ OpenVLog is a web-based tool designed for logging and tracking security vulnerab
 
 ## Setup and Installation
 
-To get OpenVLog up and running on your local machine, follow these steps:
+To get OpenVulog up and running on your local machine, follow these steps:
 
 ### Prerequisites
  - `POST /api/auth/request-password-reset`: Initiate a password reset (response is generic; in non-production returns token for manual testing).
@@ -54,7 +54,7 @@ To get OpenVLog up and running on your local machine, follow these steps:
  3. Client posts `{ token, password }` to `/api/auth/reset-password` to update the password (token single-use, expires after TTL—default 30 minutes).
  4. On success old refresh tokens are not invalidated automatically yet (future improvement: token versioning / rotation).
 ```bash
-cd OpenVLog
+cd OpenVulog
 ```
 
 ### 2. Configure Environment Variables
@@ -95,7 +95,7 @@ docker-compose exec backend node create_admin.js
 
 ### 5. Access the Application
 
-Once all services are running (and initial admin is created), access OpenVLog at:
+Once all services are running (and initial admin is created), access OpenVulog at:
 
 [http://localhost:5173](http://localhost:5173)
 

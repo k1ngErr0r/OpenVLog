@@ -12,9 +12,9 @@ export function HelpPage() {
 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger>What is OpenVLog?</AccordionTrigger>
+          <AccordionTrigger>What is OpenVulog?</AccordionTrigger>
           <AccordionContent>
-            OpenVLog is a tool designed to help security teams log, track, and
+            OpenVulog is a tool designed to help security teams log, track, and
             manage security vulnerabilities in a centralized and efficient way.
           </AccordionContent>
         </AccordionItem>

@@ -3,7 +3,7 @@ import Joyride from 'react-joyride';
 import type { CallBackProps, Step } from 'react-joyride';
 
 const steps: Step[] = [
-  { target: 'body', placement: 'center', content: 'Welcome to OpenVLog! Let\'s take a quick tour.' },
+  { target: 'body', placement: 'center', content: 'Welcome to OpenVulog! Let\'s take a quick tour.' },
   { target: '[data-tour="dashboard-table"]', content: 'This table lists recent vulnerabilities.' },
   { target: '[data-tour="add-vuln-btn"]', content: 'Create a new vulnerability here.' },
   { target: '[data-tour="users-nav"]', content: 'Admins can manage users here.' },

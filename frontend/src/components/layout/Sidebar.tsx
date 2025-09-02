@@ -72,7 +72,7 @@ export function Sidebar() {
         <div className={cn("flex h-[60px] items-center border-b", isCollapsed ? "px-2 justify-center" : "px-6 justify-between")}>
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <ShieldAlert className="h-6 w-6" />
-            <span className={cn(isCollapsed ? 'sr-only' : '')}>OpenVLog</span>
+            <span className={cn(isCollapsed ? 'sr-only' : '')}>OpenVulog</span>
           </NavLink>
           <div className={cn(isCollapsed ? 'hidden' : '')}>
             <Notifications />
@@ -108,7 +108,7 @@ export function Sidebar() {
               <SheetTitle>
                 <NavLink to="/" className="flex items-center gap-2 font-semibold">
                   <ShieldAlert className="h-6 w-6" />
-                  <span>OpenVLog</span>
+                  <span>OpenVulog</span>
                 </NavLink>
               </SheetTitle>
             </SheetHeader>

@@ -36,7 +36,7 @@ export function Header() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-blue-600 text-white px-3 py-2 rounded">Skip to content</a>
       <div className="container mx-auto flex justify-between items-center py-4">
         <h1 className="text-xl font-bold">
-          <Link to="/" className="text-primary dark:text-primary-light">OpenVLog</Link>
+          <Link to="/" className="text-primary dark:text-primary-light">OpenVulog</Link>
         </h1>
         <nav>
           <ul className="flex space-x-4">

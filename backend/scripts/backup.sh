@@ -6,7 +6,7 @@ set -euo pipefail
 # Configurable vars
 BACKUP_DIR=${BACKUP_DIR:-"./backups"}
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-FILENAME="openvlog-backup-$TIMESTAMP.sql.gz"
+FILENAME="openvulog-backup-$TIMESTAMP.sql.gz"
 DB_SERVICE=${DB_SERVICE:-"db"}
 COMPOSE_FILE_ARGS=${COMPOSE_FILE_ARGS:-""} # e.g. "-f docker-compose.yml -f docker-compose.prod.yml"
 
@@ -18,9 +18,9 @@ docker compose $COMPOSE_FILE_ARGS exec -T $DB_SERVICE pg_dump -U "$POSTGRES_USER
 
 # Optional: prune old backups (keep last 14)
 KEEP=${KEEP:-14}
-COUNT=$(ls -1t "$BACKUP_DIR"/openvlog-backup-*.sql.gz 2>/dev/null | wc -l || true)
+COUNT=$(ls -1t "$BACKUP_DIR"/openvulog-backup-*.sql.gz 2>/dev/null | wc -l || true)
 if [ "$COUNT" -gt "$KEEP" ]; then
-  ls -1t "$BACKUP_DIR"/openvlog-backup-*.sql.gz | tail -n +$((KEEP+1)) | xargs -r rm --
+  ls -1t "$BACKUP_DIR"/openvulog-backup-*.sql.gz | tail -n +$((KEEP+1)) | xargs -r rm --
 fi
 
 echo "[backup] Done -> $BACKUP_DIR/$FILENAME"

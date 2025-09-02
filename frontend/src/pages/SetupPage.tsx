@@ -67,7 +67,7 @@ export function SetupPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-gray-800/70 backdrop-blur p-6 rounded-lg shadow-lg border border-gray-700">
         <h1 className="text-2xl font-bold text-white mb-4 text-center">Initial Setup</h1>
-        <p className="text-gray-300 text-sm mb-6">Create the first administrator account for OpenVLog.</p>
+        <p className="text-gray-300 text-sm mb-6">Create the first administrator account for OpenVulog.</p>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
             <Label htmlFor="username" className="text-white">Username</Label>

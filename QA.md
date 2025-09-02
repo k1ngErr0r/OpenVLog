@@ -1,6 +1,6 @@
 # QA Checklist
 
-Comprehensive manual test scenarios for OpenVLog. Mark each scenario Pass/Fail with notes.
+Comprehensive manual test scenarios for OpenVulog. Mark each scenario Pass/Fail with notes.
 
 ## 1. Setup & Bootstrapping
 - [ ] Fresh deploy with empty DB redirects to /setup and creates first admin

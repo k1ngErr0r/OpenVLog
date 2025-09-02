@@ -11,7 +11,7 @@ const path = require('path');
 const CERT_DIR = path.join(process.cwd(), 'certs');
 
 function main() {
-  console.log('--- OpenVLog Local TLS Guide ---');
+  console.log('--- OpenVulog Local TLS Guide ---');
   console.log('\n1. Install mkcert (https://github.com/FiloSottile/mkcert)');
   console.log('   macOS:   brew install mkcert nss');
   console.log('   Windows: choco install mkcert (then run mkcert -install)');

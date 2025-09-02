@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Restore PostgreSQL backup for OpenVLog (PowerShell)
+    Restore PostgreSQL backup for OpenVulog (PowerShell)
 .DESCRIPTION
     Restores a SQL or gzipped SQL dump into the running db container.
 .PARAMETER Backup

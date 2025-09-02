@@ -22,7 +22,7 @@ param(
 $ErrorActionPreference = 'Stop'
 if (!(Test-Path $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$filename = "openvlog-backup-$timestamp.sql.gz"
+$filename = "openvulog-backup-$timestamp.sql.gz"
 Write-Host "[backup] Creating $BackupDir/$filename"
 
 $compose = "docker compose $ComposeArgs exec -T $DbService pg_dump -U $env:POSTGRES_USER $env:POSTGRES_DB"
@@ -31,7 +31,7 @@ $bytes = & bash -c "$compose" 2>$null | gzip
 [IO.File]::WriteAllBytes((Join-Path $BackupDir $filename), $bytes)
 
 # Prune old backups
-$files = Get-ChildItem $BackupDir -Filter 'openvlog-backup-*.sql.gz' | Sort-Object LastWriteTime -Descending
+$files = Get-ChildItem $BackupDir -Filter 'openvulog-backup-*.sql.gz' | Sort-Object LastWriteTime -Descending
 if ($files.Count -gt $Keep) {
     $files | Select-Object -Skip $Keep | Remove-Item
 }

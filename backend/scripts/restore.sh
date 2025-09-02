@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Restore PostgreSQL backup for OpenVLog
+# Restore PostgreSQL backup for OpenVulog
 # Usage: BACKUP=path/to/file.sql.gz ./backend/scripts/restore.sh
 set -euo pipefail
 

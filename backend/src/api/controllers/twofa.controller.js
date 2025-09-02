@@ -12,7 +12,7 @@ const setup = async (req, res, next) => {
     const secret = authenticator.generateSecret();
     const userResult = await pool.query('SELECT username FROM users WHERE id=$1', [uid]);
     const username = userResult.rows[0]?.username || 'user';
-    const issuer = 'OpenVLog';
+    const issuer = 'OpenVulog';
     const otpauth = authenticator.keyuri(username, issuer, secret);
     const qr = await qrcode.toDataURL(otpauth);
     // Store temp secret in memory? For simplicity client will echo it back; production would stash server-side.

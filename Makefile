@@ -1,5 +1,5 @@
 SHELL := /bin/sh
-PROJECT ?= openvlog
+PROJECT ?= openvulog
 
 # Helper variables
 COMPOSE := docker-compose

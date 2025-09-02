@@ -86,9 +86,9 @@ const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: 'OpenVLog API',
+      title: 'OpenVulog API',
       version: '1.0.0',
-      description: 'Interactive API documentation for the OpenVLog application. Use the "Authorize" button to authenticate with a JWT token.',
+      description: 'Interactive API documentation for the OpenVulog application. Use the "Authorize" button to authenticate with a JWT token.',
     },
     components: {
       securitySchemes: {
@@ -119,7 +119,7 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'OpenVLog API Docs',
+  customSiteTitle: 'OpenVulog API Docs',
 }));
 // --- End Swagger Setup ---
 
@@ -134,7 +134,7 @@ app.use('/api/2fa', twofaRoutes);
 app.use('/api/reports', reportRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello from the OpenVLog backend!');
+  res.send('Hello from the OpenVulog backend!');
 });
 
 app.get('/healthz', async (req, res) => {
