@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Spinner } from "@/components/ui/spinner";
 
 interface User {
@@ -27,7 +27,7 @@ export function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const { push } = useToast();
+  const toast = useToast().push;
   const [dialogOpen, setDialogOpen] = useState(false);
   const api = useApiWithToasts();
 
@@ -51,10 +51,10 @@ export function UserManagementPage() {
     try {
       await api.delete(`/api/users/${id}`);
       fetchUsers();
-      push({ type: 'success', message: 'User deleted.' });
+      toast.success('User deleted.');
     } catch (error) {
       console.error('Error deleting user:', error);
-      push({ type: 'error', message: 'Failed to delete user.' });
+      toast.error('Failed to delete user.');
     }
   };
 
@@ -63,16 +63,16 @@ export function UserManagementPage() {
       await api.post('/api/users', newUser);
       await fetchUsers();
       setNewUser({ username: '', password: '' });
-      push({ type: 'success', message: 'User added.' });
+      toast.success('User added.');
     } catch (error: any) {
       console.error('Error adding user:', error);
       const status = error?.response?.status;
       if (status === 403) {
-        push({ type: 'error', message: 'Forbidden: admin role required.' });
+        toast.error('Forbidden: admin role required.');
       } else if (status === 409) {
-        push({ type: 'error', message: 'Username already exists.' });
+        toast.error('Username already exists.');
       } else {
-        push({ type: 'error', message: 'Failed to add user.' });
+        toast.error('Failed to add user.');
       }
     }
   };

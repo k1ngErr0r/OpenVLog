@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApiWithToasts } from '@/lib/http';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ export function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const api = useApiWithToasts();
-  const { push } = useToast();
+  const toast = useToast().push;
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,11 +24,11 @@ export function ResetPasswordPage() {
     }
     try {
       await api.post('/api/auth/reset-password', { token, password });
-      push({ type: 'success', message: 'Password reset successfully. Please login.' });
+      toast.success('Password reset successfully. Please login.');
       navigate('/login');
     } catch (e:any) {
       setError('Reset failed');
-      push({ type: 'error', message: 'Reset failed' });
+      toast.error('Reset failed');
     }
   };
 

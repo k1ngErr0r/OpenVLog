@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useApiWithToasts } from '@/lib/http';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const api = useApiWithToasts();
-  const { push } = useToast();
+  const toast = useToast().push;
 
   // Setup status now handled globally by SetupGuard
 
@@ -32,10 +32,10 @@ export function LoginPage() {
         document.documentElement.classList.add('dark');
       }
       navigate("/");
-      push({ type: 'success', message: 'Logged in successfully.' });
+      toast.success('Logged in successfully.');
     } catch (err) {
       setError("Invalid username or password");
-      push({ type: 'error', message: 'Login failed.' });
+      toast.error('Login failed.');
       console.error(err);
     }
   };

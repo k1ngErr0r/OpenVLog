@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { isAdmin } from '@/lib/auth';
 import { VulnerabilityDataTable } from "@/components/VulnerabilityDataTable";
 import { useVulnerabilityColumns } from '@/hooks/useVulnerabilityColumns';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Spinner } from "@/components/ui/spinner";
 import type { Vulnerability } from '@/types';
 import { DashboardStats } from "@/components/DashboardStats";
@@ -33,7 +33,7 @@ export function DashboardPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(initialDateFrom ? new Date(initialDateFrom) : undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(initialDateTo ? new Date(initialDateTo) : undefined);
   const navigate = useNavigate();
-  const { push } = useToast();
+  const toast = useToast().push;
   const api = useApiWithToasts();
 
   const syncQuery = (overrides: Record<string, any> = {}) => {
@@ -85,10 +85,10 @@ export function DashboardPage() {
     try {
       await api.delete(`/api/vulnerabilities/${id}`);
       fetchVulnerabilities();
-      push({ type: 'success', message: 'Vulnerability deleted.' });
+      toast.success('Vulnerability deleted.');
     } catch (error) {
       console.error('Error deleting vulnerability:', error);
-      push({ type: 'error', message: 'Failed to delete vulnerability. Only admins can delete.' });
+      toast.error('Failed to delete vulnerability. Only admins can delete.');
     }
   };
 

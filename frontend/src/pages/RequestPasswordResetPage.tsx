@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApiWithToasts } from '@/lib/http';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,18 +10,18 @@ export function RequestPasswordResetPage() {
   const [username, setUsername] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const api = useApiWithToasts();
-  const { push } = useToast();
+  const toast = useToast().push;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post('/api/auth/request-password-reset', { username });
       setSubmitted(true);
-      push({ type: 'success', message: 'If the user exists, a reset token was generated.' });
+      toast.success('If the user exists, a reset token was generated.');
     } catch (e) {
       // Still show success to avoid user enumeration
       setSubmitted(true);
-      push({ type: 'info', message: 'If the user exists, a reset token was generated.' });
+      toast.info('If the user exists, a reset token was generated.');
     }
   };
 

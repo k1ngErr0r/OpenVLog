@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApiWithToasts } from '@/lib/http';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function SetupPage() {
   const api = useApiWithToasts();
-  const { push } = useToast();
+  const toast = useToast().push;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
@@ -29,7 +29,7 @@ export function SetupPage() {
         }
       } catch (err) {
         console.error('Failed to check setup status', err);
-        push({ type: 'error', message: 'Failed to check setup status.' });
+        toast.error('Failed to check setup status.');
       } finally {
         setLoading(false);
       }
@@ -46,12 +46,12 @@ export function SetupPage() {
     setSubmitting(true);
     try {
       await api.post('/api/setup/initialize', { username, password });
-      push({ type: 'success', message: 'Admin user created. Please login.' });
+      toast.success('Admin user created. Please login.');
       navigate('/login');
     } catch (err: any) {
       console.error(err);
       setError(err?.response?.data?.message || 'Setup failed.');
-      push({ type: 'error', message: 'Setup failed.' });
+      toast.error('Setup failed.');
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
@@ -83,18 +83,18 @@ api.interceptors.response.use(
 let toastInterceptorAttached = false;
 // Provide a helper hook to bind toast to axios without circular issues
 export function useApiWithToasts() {
-  const { push } = useToast();
+  const toast = useToast().push;
   if (!toastInterceptorAttached) {
     api.interceptors.response.use(
       r => r,
       err => {
         const status = err.response?.status;
         if (status === 401) {
-          push({ type: 'warning', message: 'Refreshing session…' });
+          toast.warning('Refreshing session…');
         } else if (status === 403) {
-          push({ type: 'error', message: 'Forbidden: insufficient permissions.' });
+          toast.error('Forbidden: insufficient permissions.');
         } else if (status && status >= 500) {
-          push({ type: 'error', message: 'Server error. Please try again later.' });
+          toast.error('Server error. Please try again later.');
         }
         return Promise.reject(err);
       }
