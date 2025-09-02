@@ -13,7 +13,6 @@ const UserManagementPage = lazy(() => import('./pages/UserManagementPage').then(
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { HelpPage } from "./pages/HelpPage";
-import { Header } from "./components/ui/header";
 import { Footer } from "./components/ui/footer";
 import { ToastProvider } from './components/ui/toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -27,8 +26,8 @@ function App() {
       <ToastProvider>
         <ErrorBoundary>
           <CommandPaletteProvider>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-              <Header />
+            <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex">
+              {/* Sidebar now provides primary navigation; header removed */}
               <main id="main" className="max-w-6xl mx-auto px-4 pb-10" role="main">
                 <SetupGuard>
                   <Suspense fallback={<div className="py-10 text-center text-sm text-gray-500">Loading...</div>}>

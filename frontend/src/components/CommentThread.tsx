@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 import { useApiWithToasts } from '@/lib/http';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +20,7 @@ export function CommentThread({ vulnerabilityId }: { vulnerabilityId: number }) 
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const toast = useToast().push;
 
   const load = async () => {
     setLoading(true);
@@ -26,7 +28,7 @@ export function CommentThread({ vulnerabilityId }: { vulnerabilityId: number }) 
       const res = await api.get(`/api/vulnerabilities/${vulnerabilityId}/comments`);
       setComments(res.data);
     } catch (e) {
-      /* ignore */
+      toast.error('Failed to load comments');
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,9 @@ export function CommentThread({ vulnerabilityId }: { vulnerabilityId: number }) 
       // replace optimistic with real
       setComments(prev => [res.data, ...prev.filter(c => c.id !== optimistic.id)]);
     } catch (e) {
-      // revert
       setComments(prev => prev.filter(c => c.id !== optimistic.id));
+      setBody(toSend); // restore text
+      toast.error('Failed to post comment');
     } finally {
       setPosting(false);
     }

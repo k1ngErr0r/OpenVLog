@@ -5,6 +5,27 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('themePreference'); // 'light' | 'dark' | 'system'
+          var effective = stored;
+          if (stored === 'system' || !stored) {
+            var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            effective = sysDark ? 'dark' : 'light';
+          }
+          if (stored === null) {
+            // migrate legacy 'theme' key if present
+            var legacy = localStorage.getItem('theme');
+            if (legacy === 'light' || legacy === 'dark') {
+              effective = legacy;
+              localStorage.setItem('themePreference', legacy);
+            }
+          }
+          if (effective === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) { }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

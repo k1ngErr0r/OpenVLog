@@ -118,5 +118,4 @@ module.exports = {
     resetFailedAttempts,
     incrementFailedAttempts,
     clearLockIfExpired,
-        getUserById,
 };

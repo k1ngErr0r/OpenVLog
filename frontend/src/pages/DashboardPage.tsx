@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useApiWithToasts } from '@/lib/http';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from '@/lib/auth';
-import { VulnerabilityDataTable } from "@/components/VulnerabilityDataTable";
+const VulnerabilityDataTable = lazy(() => import('@/components/VulnerabilityDataTable').then(m => ({ default: m.VulnerabilityDataTable })));
 import { useVulnerabilityColumns } from '@/hooks/useVulnerabilityColumns';
 import { useToast } from '@/components/ui/use-toast';
 import { Spinner } from "@/components/ui/spinner";
 import type { Vulnerability } from '@/types';
-import { DashboardStats } from "@/components/DashboardStats";
+const DashboardStats = lazy(() => import('@/components/DashboardStats').then(m => ({ default: m.DashboardStats })));
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -137,7 +137,9 @@ export function DashboardPage() {
         {isAdmin() && <Button onClick={() => navigate("/vulnerabilities/new")}>Add New</Button>}
       </div>
 
-      <DashboardStats />
+      <Suspense fallback={<div className="h-24 flex items-center justify-center"><Spinner /></div>}>
+        <DashboardStats />
+      </Suspense>
 
       <div>
         <h2 className="text-xl font-semibold mb-4">Vulnerability Overview</h2>
@@ -205,19 +207,22 @@ export function DashboardPage() {
         {loading ? (
           <div role="status" aria-busy="true" className="flex justify-center py-10"><Spinner /></div>
         ) : (
-          <div>
-            <VulnerabilityDataTable
-              columns={columns}
-              data={vulnerabilities}
-            />
-            <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-              <div>Page {page} of {pageCount} • {total} total</div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page<=1} onClick={()=>changePage(page-1)}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page>=pageCount} onClick={()=>changePage(page+1)}>Next</Button>
+          <Suspense fallback={<div className="py-10 flex justify-center"><Spinner /></div>}>
+            <div>
+              <VulnerabilityDataTable
+                // cast due to lazy import generic inference limitation
+                columns={columns as any}
+                data={vulnerabilities as any}
+              />
+              <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
+                <div>Page {page} of {pageCount} • {total} total</div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page<=1} onClick={()=>changePage(page-1)}>Prev</Button>
+                  <Button variant="outline" size="sm" disabled={page>=pageCount} onClick={()=>changePage(page+1)}>Next</Button>
+                </div>
               </div>
             </div>
-          </div>
+          </Suspense>
         )}
       </div>
     </div>
