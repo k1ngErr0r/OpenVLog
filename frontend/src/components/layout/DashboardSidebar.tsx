@@ -80,11 +80,11 @@ export function DashboardSidebar() {
   const currentPath = typeof window !== "undefined" ? window.location.pathname : ""
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-6">
+    <Sidebar className="bg-[--ov-surface] border-r border-[--ov-border]">
+      <SidebarHeader className="p-6 border-b border-[--ov-border]">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-[--ov-accent] rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -94,13 +94,13 @@ export function DashboardSidebar() {
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-sidebar-foreground">OpenVulog</h2>
-            <p className="text-xs text-muted-foreground">Security Platform</p>
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-white/80">OpenVLog</h2>
+            <p className="text-[10px] text-white/40">Security Platform</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3">
+      <SidebarContent className="px-2 py-4">
         <SidebarMenu>
           {navigation.map((item) => {
             const isActive =
@@ -112,9 +112,12 @@ export function DashboardSidebar() {
                 <SidebarMenuButton
                   asChild
                   isActive={isActive}
-                  className={cn("w-full justify-start", isActive && "bg-sidebar-accent text-sidebar-accent-foreground")}
+                  className={cn(
+                    "w-full justify-start transition-colors rounded-lg text-white/60 hover:text-white hover:bg-white/5",
+                    isActive && "bg-white/10 text-white shadow-inner"
+                  )}
                 >
-                  <a href={item.href} className="flex items-center space-x-3">
+                  <a href={item.href} className="flex items-center gap-3 px-2 py-2 text-sm font-medium">
                     {item.icon}
                     <span>{item.name}</span>
                   </a>
@@ -124,8 +127,10 @@ export function DashboardSidebar() {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <ThemeSwitcher />
+      <SidebarFooter className="border-t border-[--ov-border] p-4">
+        <div className="flex items-center justify-between w-full">
+          <ThemeSwitcher />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

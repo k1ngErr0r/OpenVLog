@@ -74,6 +74,23 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* Extended modern dark theme tokens */
+:root, .dark { /* unify fallbacks for now */
+  --ov-bg: #0d121a;
+  --ov-surface: #141b1f;
+  --ov-surface-alt: #182232;
+  --ov-border: #1f2732;
+  --ov-border-strong: #2a3442;
+  --ov-accent: #1d7bff;
+  --ov-accent-hover: #2c89ff;
+  --ov-field: #0f1824;
+  --ov-text: #ffffff;
+  --ov-text-muted: #8b95a5;
+  --ov-text-faint: #64707f;
+  --ov-danger: #ef4444;
+  --ov-focus-ring: 217 91% 60%; /* hsl for tailwind ring utilities */
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -135,4 +152,21 @@
     @apply absolute w-6 h-6 text-xs rounded-full bg-primary text-primary-foreground flex items-center justify-center;
     left: -1.5rem;
   }
+
+  /* Panel & glow utilities for new aesthetic */
+  .ov-panel {
+    @apply rounded-2xl border border-white/5 bg-gradient-to-b from-[--ov-surface-alt] to-[--ov-surface] shadow-xl shadow-black/40; }
+  .ov-panel-flat { @apply rounded-xl border border-[--ov-border] bg-[--ov-surface]; }
+  .ov-glow { position: relative; }
+  .ov-glow:before { content:""; position:absolute; inset:0; border-radius:inherit; background:radial-gradient(circle at 30% 20%, var(--ov-accent)/12, transparent 70%); pointer-events:none; }
+  .ov-form-label { @apply text-xs font-medium uppercase tracking-wide text-white/60; }
+  .ov-heading { @apply text-2xl font-semibold tracking-tight text-white; }
+  .ov-muted { color: var(--ov-text-muted); }
+  .ov-input-base { @apply bg-[--ov-field] border border-[--ov-border-strong] text-white placeholder:text-white/30 focus-visible:border-[--ov-accent] focus-visible:ring-1 focus-visible:ring-[--ov-accent] focus-visible:ring-opacity-40; }
+  /* Simple entrance animation */
+  @keyframes ov-fade-slide {
+    from { opacity:0; transform:translateY(6px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .ov-animate-panel { animation: ov-fade-slide .45s cubic-bezier(.22,.8,.36,1) both; }
 }

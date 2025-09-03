@@ -41,63 +41,58 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-      <div className="w-[400px] bg-gray-800 p-6 rounded-lg shadow-lg">
-        <div className="mb-4 bg-yellow-100 text-yellow-800 p-3 rounded-md">
-          <p>
-            Authentication has been improved for security. All users are required
-            to re-login.{" "}
-            <a href="#" className="underline">
-              More Info
-            </a>
-          </p>
-        </div>
-  <h1 className="text-2xl font-bold text-white mb-6 text-center">Login</h1>
-        <form onSubmit={handleLogin} className="space-y-4" aria-describedby={error ? 'login-error' : undefined} noValidate>
-          <div>
-            <Label htmlFor="username" className="text-white">
-              Username
-            </Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className="w-full p-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              required
-            />
+    <div className="min-h-screen flex items-center justify-center bg-[#0e1420] px-4">
+      <div className="w-full max-w-md relative">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 via-transparent to-transparent blur-xl" />
+        <div className="relative rounded-2xl border border-white/5 bg-gradient-to-b from-[#182232] to-[#121a27] shadow-xl shadow-black/40 p-8">
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight text-white">Welcome to OpenVLog</h1>
+            <p className="mt-2 text-sm text-white/60">Sign in to manage your vulnerabilities</p>
           </div>
-          <div>
-            <Label htmlFor="password" className="text-white">
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full p-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              required
-            />
-          </div>
-          {error && (
-            <div id="login-error" role="alert" aria-live="polite" className="bg-red-100 text-red-700 p-2 rounded-md dark:bg-red-900 dark:text-red-200">
-              {error}
+          <form onSubmit={handleLogin} className="space-y-5" aria-describedby={error ? 'login-error' : undefined} noValidate>
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-xs font-medium uppercase tracking-wide text-white/70">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                className="bg-[#0f1824] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-blue-600"
+                required
+              />
             </div>
-          )}
-          <Button
-            type="submit"
-            className="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          >
-            Submit
-          </Button>
-        </form>
-        <div className="mt-4 text-center space-y-2 text-sm text-gray-300">
-          <Link to="/request-password-reset" className="underline text-yellow-400">Forgot password?</Link>
-          <div>
-            Have a reset token? <Link to="/reset-password" className="underline text-yellow-400">Reset now</Link>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wide text-white/70">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="bg-[#0f1824] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-blue-600"
+                required
+              />
+            </div>
+            {error && (
+              <div id="login-error" role="alert" aria-live="polite" className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {error}
+              </div>
+            )}
+            <div className="flex items-center justify-between text-xs">
+              <label className="flex items-center gap-2 select-none text-white/60">
+                <input type="checkbox" className="h-3 w-3 rounded border-white/20 bg-[#0f1824] text-blue-600 focus:ring-blue-600" />
+                Remember me
+              </label>
+              <Link to="/request-password-reset" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">Forgot password?</Link>
+            </div>
+            <Button type="submit" variant="primaryBlue" className="w-full font-medium tracking-wide">Log In</Button>
+          </form>
+          <div className="mt-8 text-center text-xs text-white/40">
+            Have a reset token?{' '}
+            <Link to="/reset-password" className="text-blue-400 hover:text-blue-300 font-medium">Reset now</Link>
           </div>
         </div>
       </div>

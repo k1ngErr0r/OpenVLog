@@ -23,7 +23,7 @@ export function SetupPage() {
       try {
         const resp = await api.get('/api/setup/status');
         if (!resp.data.needsSetup) {
-          navigate('/login');
+          navigate('/');
         } else {
           setNeedsSetup(true);
         }
@@ -45,9 +45,10 @@ export function SetupPage() {
     }
     setSubmitting(true);
     try {
-      await api.post('/api/setup/initialize', { username, password });
-      toast.success('Admin user created. Please login.');
-      navigate('/login');
+  await api.post('/api/setup/initialize', { username, password });
+  toast.success('Administrator created. You can now log in.');
+  // After creating the admin we still need to authenticate; take user to login for credentials entry
+  navigate('/login', { replace: true });
     } catch (err: any) {
       console.error(err);
       setError(err?.response?.data?.message || 'Setup failed.');

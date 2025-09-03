@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Home, ShieldAlert, Users, HelpCircle, Sun, Moon, Monitor, LogOut, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, ShieldAlert, Users, HelpCircle, Sun, Moon, Monitor, LogOut, Menu, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/lib/http';
 import { Notifications } from '@/components/Notifications';
@@ -19,7 +19,6 @@ function useThemePreference() {
   const apply = useCallback((effective: 'light' | 'dark') => {
     document.documentElement.classList.toggle('dark', effective === 'dark');
   }, []);
-  // Apply on mount & when media changes (if system) or pref changes.
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const sync = () => {
@@ -32,18 +31,35 @@ function useThemePreference() {
       return () => media.removeEventListener('change', sync);
     }
   }, [pref, apply]);
-  const cycle = () => {
-    setPref(p => {
-      const next: ThemePref = p === 'light' ? 'dark' : p === 'dark' ? 'system' : 'light';
-      localStorage.setItem('themePreference', next);
-      return next;
-    });
+  const setPreference = (p: ThemePref) => {
+    setPref(p);
+    localStorage.setItem('themePreference', p);
   };
-  const icon = pref === 'light' ? <Sun className="h-5 w-5" /> : pref === 'dark' ? <Moon className="h-5 w-5" /> : <Monitor className="h-5 w-5" />;
+  const icon = pref === 'light' ? <Sun className="h-4 w-4" /> : pref === 'dark' ? <Moon className="h-4 w-4" /> : <Monitor className="h-4 w-4" />;
   const label = `Theme: ${pref.charAt(0).toUpperCase() + pref.slice(1)}`;
-  const effectiveDark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  return { pref, cycle, icon, label, effectiveDark };
+  return { pref, setPreference, icon, label };
 }
+
+const ThemeSelector: React.FC<{ collapsed: boolean; pref: ThemePref; onChange: (p: ThemePref)=>void; icon: React.ReactNode; label: string; }> = ({ collapsed, pref, onChange, icon, label }) => {
+  const [open, setOpen] = useState(false);
+  const handleSelect = (val: ThemePref) => { onChange(val); setOpen(false); };
+  return (
+    <div className="relative w-full">
+      <Button variant="ghost" size={collapsed ? 'icon' : 'sm'} className={cn('w-full justify-start gap-2', collapsed && 'justify-center')} aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={()=>setOpen(o=>!o)}>
+        {icon}
+        {!collapsed && <span className="flex-1 text-left">{pref.charAt(0).toUpperCase()+pref.slice(1)}</span>}
+        {!collapsed && <ChevronDown className="h-4 w-4 opacity-60" />}
+      </Button>
+      {open && (
+        <div role="menu" className="absolute z-50 mt-1 w-full min-w-[140px] rounded-md border bg-white dark:bg-gray-800 shadow-lg p-1 text-sm">
+          {(['light','dark','system'] as ThemePref[]).map(p => (
+            <button key={p} onClick={()=>handleSelect(p)} className={cn('flex w-full items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700', p===pref && 'bg-gray-100 dark:bg-gray-700 font-medium')}>{p==='light'? <Sun className="h-4 w-4" />: p==='dark'? <Moon className="h-4 w-4" />: <Monitor className="h-4 w-4" />} <span className={collapsed ? 'sr-only' : ''}>{p.charAt(0).toUpperCase()+p.slice(1)}</span></button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const navItems = [
   { to: '/', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
@@ -53,7 +69,7 @@ const navItems = [
 
 export function Sidebar() {
   const navigate = useNavigate();
-  const { pref, cycle, icon, label, effectiveDark } = useThemePreference();
+  const { pref, setPreference, icon, label } = useThemePreference();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1'; } catch { return false; }
   });
@@ -87,36 +103,29 @@ export function Sidebar() {
   return (
     <>
       <div className={cn('hidden md:flex flex-col border-r bg-gray-100/40 dark:bg-gray-800/40 transition-all duration-300', isCollapsed ? 'w-20' : 'w-64')} aria-label="Sidebar">
-        <div className={cn('flex h-[60px] items-center gap-2 border-b', isCollapsed ? 'px-2 justify-center' : 'px-4')}>
-          <Button variant="outline" size="icon" onClick={() => setIsCollapsed(c => !c)} aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+        <div className={cn('flex h-[60px] items-center gap-2 border-b', isCollapsed ? 'px-2 justify-center' : 'px-3')}>          
           <NavLink to="/" className={cn('flex items-center gap-2 font-semibold flex-1', isCollapsed && 'justify-center')}>
             <ShieldAlert className="h-6 w-6" />
             <span className={cn(isCollapsed ? 'sr-only' : '')}>OpenVulog</span>
           </NavLink>
-          {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={cycle} aria-label={label} title={label}>
-                {icon}
-              </Button>
-              <Notifications />
-            </div>
-          )}
+          <Button variant="outline" size="icon" onClick={() => setIsCollapsed(c => !c)} aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
         </div>
         <div className="flex-1 overflow-auto py-2">
           <NavLinks />
         </div>
         <div className="mt-auto p-2 border-t flex flex-col gap-2">
-          <Button variant="ghost" size={isCollapsed ? 'icon' : undefined} className={cn('w-full justify-start gap-3', isCollapsed && 'justify-center')} onClick={handleLogout} aria-label="Logout">
-            <LogOut className="h-5 w-5" />
-            <span className={cn(isCollapsed ? 'sr-only' : '')}>Logout</span>
-          </Button>
-          {isCollapsed && (
-            <Button variant="ghost" size="icon" onClick={cycle} aria-label={label} title={label}>
-              {icon}
+          <div className={cn('flex', isCollapsed ? 'flex-col gap-2 items-center' : 'flex-col gap-2')}>
+            <ThemeSelector collapsed={isCollapsed} pref={pref} onChange={setPreference} icon={icon} label={label} />
+            <div className={cn('w-full flex', isCollapsed ? 'justify-center' : '')}>
+              <Notifications />
+            </div>
+            <Button variant="ghost" size={isCollapsed ? 'icon' : undefined} className={cn('w-full justify-start gap-3 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300', isCollapsed && 'justify-center')} onClick={handleLogout} aria-label="Logout" title="Logout">
+              <LogOut className="h-5 w-5" />
+              <span className={cn(isCollapsed ? 'sr-only' : '')}>Logout</span>
             </Button>
-          )}
+          </div>
         </div>
       </div>
   <header className="flex md:hidden h-14 items-center justify-between gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">

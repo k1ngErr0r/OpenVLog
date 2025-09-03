@@ -93,6 +93,8 @@ export function useApiWithToasts() {
           toast.warning('Refreshing session…');
         } else if (status === 403) {
           toast.error('Forbidden: insufficient permissions.');
+        } else if (status === 429) {
+          toast.warning('Too many requests. Please slow down.');
         } else if (status && status >= 500) {
           toast.error('Server error. Please try again later.');
         }
